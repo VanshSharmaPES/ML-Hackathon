@@ -2,20 +2,29 @@
 
 This is the ONLY API module that reads a .route file. Reference arcs never
 leave this module: only summary metrics are returned to the caller.
+
+Per-point reference arcs come from P1's alignment (pathsnap_p1.alignment),
+the same function that produced the training labels, so the API's Top-1
+accuracy means exactly what the report's Top-1 accuracy means.
 """
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 
 import numpy as np
 
-from data_processing.route_alignment import align_points_to_route
-from inference.trip_io import load_trip, trip_file
+from pathsnap_p1.alignment import align_reference
+from pathsnap_p1.data import Trip
 
 
-def load_reference_route(trip_dir: Path) -> list[int]:
-    with open(trip_file(trip_dir, "route")) as f:
-        return [int(line) for line in f if line.strip()]
+def load_reference_route(trip_dir: Path, trip: Trip) -> np.ndarray:
+    path = trip_dir / f"{trip_dir.name}.route"
+    route = np.array([int(line) for line in path.read_text().split()], dtype=np.int64)
+    valid = trip.arcs.valid.to_numpy()
+    if len(route) == 0 or route.min() < 0 or route.max() >= len(valid) or not valid[route].all():
+        raise ValueError(f"Reference route for trip {trip.trip_id} refers to missing or invalid arcs")
+    return route
 
 
 def route_overlap(predicted: list[int], reference: list[int]) -> dict[str, float]:
@@ -28,27 +37,33 @@ def route_overlap(predicted: list[int], reference: list[int]) -> dict[str, float
     return {"route_precision": precision, "route_recall": recall, "route_f1": f1}
 
 
-def continuity(route: list[int], arcs: np.ndarray) -> float | None:
+def continuity(route: list[int], trip: Trip) -> float | None:
     """Share of consecutive predicted arcs where one arc's to-node is the next arc's from-node."""
     if len(route) < 2:
         return None
-    joined = sum(arcs[a, 1] == arcs[b, 0] for a, b in zip(route, route[1:]))
+    from_node = trip.arcs.from_node.to_numpy()
+    to_node = trip.arcs.to_node.to_numpy()
+    joined = sum(to_node[a] == from_node[b] for a, b in zip(route, route[1:]))
     return float(joined) / (len(route) - 1)
 
 
-def top1_accuracy(predicted_arc_per_obs: list[int], aligned_arc_per_obs: np.ndarray) -> float:
-    """Share of GPS points whose predicted arc is the reference arc aligned to that point."""
+def top1_accuracy(predicted_arc_per_obs: list[int], reference_arc_per_obs: np.ndarray) -> float | None:
+    """Share of labelled GPS points whose predicted arc is the aligned reference arc."""
     predicted = np.asarray(predicted_arc_per_obs, dtype=np.int64)
-    return float(np.mean(predicted == aligned_arc_per_obs))
+    labelled = reference_arc_per_obs >= 0
+    if not labelled.any():
+        return None
+    return float(np.mean(predicted[labelled] == reference_arc_per_obs[labelled]))
 
 
-def score_trip(trip_dir: Path, prediction: dict) -> dict:
-    trip = load_trip(trip_dir)
-    reference = load_reference_route(trip_dir)
-    aligned, _ = align_points_to_route(trip.gps_xy, trip.nodes_xy, trip.arcs, reference)
+def score_trip(trip_dir: Path, trip: Trip, prediction: dict, config: dict) -> dict:
+    reference = load_reference_route(trip_dir, trip)
+    # The trip was loaded for prediction without its reference. Attach the route to a
+    # copy, here on the server only, so P1's alignment can label each point.
+    labels = align_reference(dataclasses.replace(trip, route=reference), config)
     route = prediction["predicted_arcs"]
     return {
-        "top1_accuracy": top1_accuracy(prediction["predicted_arc_per_obs"], aligned),
-        **route_overlap(route, reference),
-        "continuity": continuity(route, trip.arcs),
+        "top1_accuracy": top1_accuracy(prediction["predicted_arc_per_obs"], labels.reference_arc_id.to_numpy()),
+        **route_overlap(route, reference.tolist()),
+        "continuity": continuity(route, trip),
     }

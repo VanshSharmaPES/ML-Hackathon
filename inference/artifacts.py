@@ -1,39 +1,56 @@
-"""Load the exported model and configuration once, at API startup.
+"""Load the exported model and decoder configuration once, at API startup.
 
 Expected files in the artifacts folder (see docs/interfaces.md):
-    model.joblib      fitted scikit-learn Pipeline with predict_proba (P2)
-    features.json     {"features": [...], "model_name": str, "trained_on": str, "seed": int} (P2)
-    hmm_config.json   candidate + emission/transition/gap parameters (P1/P3)
+    model.joblib     bundle saved by pathsnap_p1.models.train (P1/P2):
+                     {"pipeline": fitted sklearn Pipeline, "features": [...],
+                      "configuration": {...pipeline settings used in training...}, ...}
+    hmm_config.json  emission / transition / gap parameters for hmm.viterbi.decode (P3)
 
-If none of them exist yet, the API runs the nearest-arc baseline.
-If only some exist, startup fails, so a half-exported model is never served.
+Neither present -> the API serves the nearest-arc baseline.
+Only one present -> startup fails, so a half-exported model is never served.
 """
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 import joblib
 
-REQUIRED_FILES = ("model.joblib", "features.json", "hmm_config.json")
+REQUIRED_FILES = ("model.joblib", "hmm_config.json")
+BUNDLE_KEYS = ("pipeline", "features", "configuration")
 
 
 @dataclass
 class Artifacts:
-    model: Any = None
-    features: list[str] = field(default_factory=list)
-    meta: dict = field(default_factory=dict)
+    bundle: dict | None = None
     hmm_config: dict = field(default_factory=dict)
 
     @property
     def loaded(self) -> bool:
-        return self.model is not None
+        return self.bundle is not None
+
+    @property
+    def pipeline(self):
+        return self.bundle["pipeline"]
+
+    @property
+    def features(self) -> list[str]:
+        return list(self.bundle["features"])
+
+    @property
+    def feature_config(self) -> dict:
+        """Pipeline settings the model was trained with (candidates, gaps, projection)."""
+        return self.bundle["configuration"]
 
     @property
     def model_name(self) -> str:
-        return self.meta.get("model_name", type(self.model).__name__ if self.model is not None else "none")
+        if not self.loaded:
+            return "none"
+        if self.bundle.get("model_name"):
+            return self.bundle["model_name"]
+        steps = getattr(self.pipeline, "steps", None)
+        return type(steps[-1][1] if steps else self.pipeline).__name__
 
 
 def load_artifacts(artifacts_dir: Path) -> Artifacts:
@@ -44,16 +61,13 @@ def load_artifacts(artifacts_dir: Path) -> Artifacts:
     if missing:
         raise RuntimeError(f"Incomplete artifacts in {artifacts_dir}: missing {', '.join(missing)}")
 
-    meta = json.loads((artifacts_dir / "features.json").read_text())
-    features = meta.get("features") or []
-    if not features:
-        raise RuntimeError("features.json has no 'features' list")
-    model = joblib.load(artifacts_dir / "model.joblib")
-    if not hasattr(model, "predict_proba"):
-        raise RuntimeError(f"{type(model).__name__} in model.joblib has no predict_proba")
-    return Artifacts(
-        model=model,
-        features=features,
-        meta=meta,
-        hmm_config=json.loads((artifacts_dir / "hmm_config.json").read_text()),
-    )
+    bundle = joblib.load(artifacts_dir / "model.joblib")
+    if not isinstance(bundle, dict) or any(key not in bundle for key in BUNDLE_KEYS):
+        raise RuntimeError(f"model.joblib must be a dict with keys {BUNDLE_KEYS} "
+                           "(the format saved by pathsnap_p1.models.train)")
+    pipeline = bundle["pipeline"]
+    if not hasattr(pipeline, "predict_proba") or 1 not in list(getattr(pipeline, "classes_", [])):
+        raise RuntimeError("The model pipeline needs predict_proba and a positive class 1")
+    if not bundle["features"]:
+        raise RuntimeError("The model bundle has an empty feature list")
+    return Artifacts(bundle=bundle, hmm_config=json.loads((artifacts_dir / "hmm_config.json").read_text()))

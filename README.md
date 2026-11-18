@@ -80,8 +80,16 @@ into the UTM zone of its own GPS track (`pathsnap_p1/geometry.py`).
    ```
    Writes `outputs/feature_selection/FEATURE_SELECTION.md` and its figures.
 4. **Interactive maps (P1)**: `python -m pathsnap_p1 maps`
-5. **Further models (P2)**: pass estimators to `pathsnap_p1.models.train` (see `HANDOVER.md`).
-6. **Bayesian optimisation (P2)**: _TODO_
+5. **Further models (P2)**: Logistic Regression and HistGradientBoosting through the same harness:
+   `python train_p2_baselines.py` (results in `outputs_p2/`).
+6. **Bayesian optimisation (P2)**: Optuna TPE, 50 trials per model, 5-fold trip-grouped CV Macro F1 on the
+   training trips: `python tune_p2_optuna.py` (trials and best parameters in `outputs_p2/optuna/`).
+   Then compare untuned vs tuned on the same folds and student_test trips, and export the selected
+   tuned model to `artifacts/model.joblib` (about 10 minutes):
+   ```bash
+   python -m optimisation.tuned_vs_untuned --prepared /tmp/pathsnap-prepared --export
+   ```
+   Writes `outputs_p2/tuning/TUNING_REPORT.md`, `tuned_vs_untuned.csv`, `tuning_cost.csv` and figures.
 7. **HMM / Viterbi decoding and comparison (P3)**: _TODO_
 
 Quick isolated check: `python -m pathsnap_p1 all --limit 2 --output outputs/smoke --folds 2`.
@@ -102,7 +110,8 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log
   If they are supplied separately: `REFERENCE_DIR=/path/to/routes`. Trips without a reference route are
   still predicted; their accuracy metrics show as unavailable.
 - Every request is logged in this terminal.
-- Uses the model in `artifacts/` (`model.joblib`, `hmm_config.json`) when present; otherwise serves the nearest-arc baseline. `/health` shows which.
+- Serving method depends on `artifacts/`: `model.joblib` alone → classifier only; plus `hmm_config.json`
+  → classifier + HMM/Viterbi; nothing → nearest-arc baseline. `/health`, the logs and the UI show which.
 - Interactive docs: `http://<laptop1-ip>:8000/docs`
 - Fedora firewall: `sudo firewall-cmd --add-port=8000/tcp`
 

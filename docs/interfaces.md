@@ -30,7 +30,7 @@ How the parts of the pipeline connect. P1's detailed feature and label contract 
 ## 2. Model artifacts (P2, P3 → P4)
 Both files go in `artifacts/`. The API loads them once at startup.
 
-- `model.joblib`: the bundle saved by `pathsnap_p1.models.train`:
+- `model.joblib`: the bundle saved by `pathsnap_p1.models.train` or `optimisation/tuned_vs_untuned.py --export`:
   `{"pipeline": fitted sklearn Pipeline, "features": [...], "configuration": {...}, ...}`.
   The pipeline must have `predict_proba` with class `1` = "this candidate is the correct arc".
   Optionally add `"model_name": "<name>"` for display; otherwise the classifier's class name is shown.
@@ -38,7 +38,13 @@ Both files go in `artifacts/`. The API loads them once at startup.
   the training settings.
 - `hmm_config.json`: emission / transition / gap parameters for the decoder.
 
-Neither present → API serves the nearest-arc baseline. Only one present → API refuses to start.
+| In `artifacts/` | API method |
+|---|---|
+| nothing | nearest-arc baseline |
+| `model.joblib` | `<model_name>, classifier only`: highest-scoring candidate per point (ties: lower `distance_rank`, then lower arc ID, as in training Top-1) |
+| `model.joblib` + `hmm_config.json` | `<model_name> + HMM/Viterbi` (refuses to start if `hmm/viterbi.py` is missing) |
+| `hmm_config.json` only | refuses to start |
+
 Train the final model with the pinned `requirements.txt`, or it may not load on the API laptop.
 
 ## 3. Decoder (P3 → P4)

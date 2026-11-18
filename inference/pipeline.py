@@ -6,15 +6,19 @@
 Trips are loaded with P1's loader (pathsnap_p1.data.load_trip) with
 with_reference=False, so the .route file is never opened here.
 
-Two methods, chosen at startup:
+Three methods, chosen at startup from what is in artifacts/:
 
-* Full pipeline (when artifacts/ holds the exported model):
+* Classifier + HMM (model.joblib + hmm_config.json):
   candidates + features (P1, pathsnap_p1.features.generate_features, using the
   configuration stored in the model bundle, i.e. exactly the training settings)
   -> classifier probabilities (P2, artifacts/model.joblib)
   -> HMM/Viterbi decoding (P3, hmm.viterbi.decode)
 
-* Nearest-arc baseline (until then): each GPS point is snapped to the closest
+* Classifier only (model.joblib alone): same candidates and probabilities, then
+  the highest-scoring candidate per GPS point (ties: lower distance rank, then
+  lower arc ID), exactly as observation-level Top-1 is computed in training.
+
+* Nearest-arc baseline (no model): each GPS point is snapped to the closest
   valid road segment, then the reverse twin is kept if it points the way the
   vehicle is moving (most roads are stored as A->B and B->A with identical geometry).
 
@@ -94,6 +98,18 @@ def _baseline_arcs(trip: Trip) -> np.ndarray:
     return arc_ids[choice]
 
 
+# ---------- classifier only ----------
+
+def _classifier_only(candidates, probs, trip: Trip, cfg) -> dict[int, int]:
+    """Highest-scoring candidate per GPS point. Ties: lower distance rank, then lower arc ID
+    (the same order pathsnap_p1.models.evaluate_predictions uses for Top-1)."""
+    scored = candidates[["observation_id", "candidate_arc_id", "distance_rank"]].assign(score=probs)
+    scored = scored.sort_values(["observation_id", "score", "distance_rank", "candidate_arc_id"],
+                                ascending=[True, False, True, True], kind="stable")
+    best = scored.drop_duplicates("observation_id")
+    return dict(zip(best.observation_id.astype(int), best.candidate_arc_id.astype(int)))
+
+
 # ---------- predictor ----------
 
 class Predictor:
@@ -105,14 +121,18 @@ class Predictor:
             return
         # Serve with the exact settings the model was trained with.
         self.config = artifacts.feature_config
+        self._positive = list(artifacts.pipeline.classes_).index(1)
+        if not artifacts.uses_hmm:
+            self._decode = _classifier_only
+            self.method = f"{artifacts.model_name}, classifier only"
+            return
         try:
             from hmm.viterbi import decode
         except ImportError as exc:
             raise RuntimeError(
-                f"Model artifacts are present but the decoder is missing: {exc}. Expected hmm.viterbi.decode."
+                f"hmm_config.json is present but the decoder is missing: {exc}. Expected hmm.viterbi.decode."
             ) from exc
         self._decode = decode
-        self._positive = list(artifacts.pipeline.classes_).index(1)
         self.method = f"{artifacts.model_name} + HMM/Viterbi"
 
     @property
@@ -135,7 +155,7 @@ class Predictor:
 
         t = time.perf_counter()
         decoded = self._decode(cands, probs, trip, self.artifacts.hmm_config)  # {observation_id: arc_id}
-        timings["viterbi"] = (time.perf_counter() - t) * 1000
+        timings["viterbi" if self.artifacts.uses_hmm else "select"] = (time.perf_counter() - t) * 1000
 
         return np.array([decoded.get(int(o), NO_ARC) for o in trip.observations.observation_id], dtype=np.int64)
 

@@ -1,0 +1,27 @@
+{
+  "selected_model": "hist_gradient_boosting",
+  "selected_by": "highest tuned 5-fold CV Macro F1 on training trips",
+  "selected_hyperparameters": {
+    "l2_regularization": 5.089809701047425e-05,
+    "learning_rate": 0.05097983315308033,
+    "max_iter": 160,
+    "max_leaf_nodes": 63,
+    "min_samples_leaf": 80
+  },
+  "elapsed_seconds": 251.7,
+  "folds": 5,
+  "features": [
+    "distance_m",
+    "heading_difference_deg",
+    "speed_mps",
+    "arc_length_m",
+    "distance_rank",
+    "candidate_count",
+    "time_gap_s",
+    "previous_nearest_distance_m",
+    "heading_missing",
+    "speed_missing",
+    "large_gap"
+  ],
+  "seed": 42
+}

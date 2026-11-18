@@ -71,10 +71,18 @@ into the UTM zone of its own GPS track (`pathsnap_p1/geometry.py`).
    python -m pathsnap_p1 train
    ```
    Writes `outputs/model_comparison.csv`, `outputs/cv_results.csv`, `outputs/MODEL_REPORT.md`.
-3. **Interactive maps (P1)**: `python -m pathsnap_p1 maps`
-4. **Further models (P2)**: pass estimators to `pathsnap_p1.models.train` (see `HANDOVER.md`).
-5. **Bayesian optimisation (P2)**: _TODO_
-6. **HMM / Viterbi decoding and comparison (P3)**: _TODO_
+3. **Feature selection evidence (P1)**: correlation, single-feature AUC, permutation importance and
+   drop-one ablation on the training trips (about 9 minutes; prepares into a temporary folder so the
+   committed `outputs/` files are not overwritten):
+   ```bash
+   python -m pathsnap_p1 prepare --output /tmp/pathsnap-prepared
+   python -m pathsnap_p1.feature_selection --prepared /tmp/pathsnap-prepared --output outputs/feature_selection
+   ```
+   Writes `outputs/feature_selection/FEATURE_SELECTION.md` and its figures.
+4. **Interactive maps (P1)**: `python -m pathsnap_p1 maps`
+5. **Further models (P2)**: pass estimators to `pathsnap_p1.models.train` (see `HANDOVER.md`).
+6. **Bayesian optimisation (P2)**: _TODO_
+7. **HMM / Viterbi decoding and comparison (P3)**: _TODO_
 
 Quick isolated check: `python -m pathsnap_p1 all --limit 2 --output outputs/smoke --folds 2`.
 
@@ -105,7 +113,15 @@ curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -
 
 ### UI (Laptop 2)
 
-_TODO_
+From the repo root, with the venv active:
+
+```bash
+API_URL=http://<laptop1-ip>:8000 streamlit run ui/app.py --server.address 0.0.0.0 --server.port 8501
+```
+
+- Open `http://localhost:8501` on Laptop 2.
+- The API address can also be changed in the sidebar.
+- The UI shows raw GPS points, the predicted route and the server-computed metrics. It never receives the reference route.
 
 ## AI-use disclosure
 

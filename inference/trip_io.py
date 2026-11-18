@@ -1,4 +1,4 @@
-"""Read a trip folder's GPS track and road network.
+"""Read a trip folder's GPS track and road network, already projected to metres.
 
 This module never reads the .route file. Ground truth is read only by
 api/scoring.py, on the server, after the prediction has been made.
@@ -11,13 +11,18 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from .geo import TripProjection
+
 
 @dataclass
 class Trip:
     trip_id: str
-    track: pd.DataFrame  # columns: obs_idx, lon, lat, t
-    nodes: np.ndarray    # shape (n_nodes, 2): lon, lat. Row index = node_id
-    arcs: np.ndarray     # shape (n_arcs, 2): from_node, to_node. Row index = arc_id
+    track: pd.DataFrame   # columns: obs_idx, lon, lat, t
+    nodes: np.ndarray     # shape (n_nodes, 2): lon, lat. Row index = node_id
+    arcs: np.ndarray      # shape (n_arcs, 2): from_node, to_node. Row index = arc_id
+    epsg: int             # UTM zone used for this trip
+    gps_xy: np.ndarray    # shape (n_points, 2): metres, same row order as track
+    nodes_xy: np.ndarray  # shape (n_nodes, 2): metres
 
 
 def trip_file(trip_dir: Path, ext: str) -> Path:
@@ -45,11 +50,19 @@ def load_arcs(trip_dir: Path) -> np.ndarray:
 
 
 def load_trip(trip_dir: Path) -> Trip:
+    trip_dir = Path(trip_dir)
+    track = load_track(trip_dir)
+    nodes = load_nodes(trip_dir)
+    gps_lonlat = track[["lon", "lat"]].to_numpy()
+    project = TripProjection(gps_lonlat)
     return Trip(
         trip_id=trip_dir.name,
-        track=load_track(trip_dir),
-        nodes=load_nodes(trip_dir),
+        track=track,
+        nodes=nodes,
         arcs=load_arcs(trip_dir),
+        epsg=project.epsg,
+        gps_xy=project(gps_lonlat),
+        nodes_xy=project(nodes),
     )
 
 

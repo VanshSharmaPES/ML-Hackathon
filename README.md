@@ -71,6 +71,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log
 - Serves the trips in `EVAL_DIR` (default `data/student_test`). For evaluation:
   `EVAL_DIR=/path/to/eval_trips uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log`
 - Every request is logged in this terminal.
+- Uses the model in `artifacts/` (`model.joblib`, `features.json`, `hmm_config.json`) when present; otherwise serves the nearest-arc baseline. `/health` shows which.
 - Interactive docs: `http://<laptop1-ip>:8000/docs`
 - Fedora firewall: `sudo firewall-cmd --add-port=8000/tcp`
 

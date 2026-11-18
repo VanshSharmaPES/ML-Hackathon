@@ -9,7 +9,8 @@ from pathlib import Path
 
 import numpy as np
 
-from inference.trip_io import load_arcs, trip_file
+from data_processing.route_alignment import align_points_to_route
+from inference.trip_io import load_trip, trip_file
 
 
 def load_reference_route(trip_dir: Path) -> list[int]:
@@ -35,11 +36,19 @@ def continuity(route: list[int], arcs: np.ndarray) -> float | None:
     return float(joined) / (len(route) - 1)
 
 
+def top1_accuracy(predicted_arc_per_obs: list[int], aligned_arc_per_obs: np.ndarray) -> float:
+    """Share of GPS points whose predicted arc is the reference arc aligned to that point."""
+    predicted = np.asarray(predicted_arc_per_obs, dtype=np.int64)
+    return float(np.mean(predicted == aligned_arc_per_obs))
+
+
 def score_trip(trip_dir: Path, prediction: dict) -> dict:
+    trip = load_trip(trip_dir)
     reference = load_reference_route(trip_dir)
+    aligned, _ = align_points_to_route(trip.gps_xy, trip.nodes_xy, trip.arcs, reference)
     route = prediction["predicted_arcs"]
     return {
-        "top1_accuracy": None,  # needs per-point labels from P1's alignment
+        "top1_accuracy": top1_accuracy(prediction["predicted_arc_per_obs"], aligned),
         **route_overlap(route, reference),
-        "continuity": continuity(route, load_arcs(trip_dir)),
+        "continuity": continuity(route, trip.arcs),
     }

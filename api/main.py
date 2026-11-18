@@ -13,7 +13,8 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from inference.pipeline import METHOD, predict_trip
+from inference.artifacts import load_artifacts
+from inference.pipeline import Predictor
 from inference.trip_io import count_points, trip_file
 
 from . import config
@@ -45,17 +46,26 @@ def resolve_trip(trip_id: str) -> Path:
     return config.EVAL_DIR / trip_id
 
 
+def fmt(value) -> str:
+    return "n/a" if value is None else f"{value:.3f}"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Load the model and configs once, not per request.
+    app.state.predictor = Predictor(load_artifacts(config.ARTIFACTS_DIR))
     trips = list_trip_ids()
-    log.info("PathSnap API starting | method=%s | eval_dir=%s | trips=%d", METHOD, config.EVAL_DIR, len(trips))
+    log.info("PathSnap API starting | method=%s | artifacts=%s | eval_dir=%s | trips=%d",
+             app.state.predictor.method, config.ARTIFACTS_DIR, config.EVAL_DIR, len(trips))
+    if not app.state.predictor.model_loaded:
+        log.warning("No model in %s. Serving the nearest-arc baseline.", config.ARTIFACTS_DIR)
     if not trips:
         log.warning("No trips found in %s. Set EVAL_DIR to the folder holding the trip folders.", config.EVAL_DIR)
     yield
     log.info("PathSnap API stopped")
 
 
-app = FastAPI(title="PathSnap API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="PathSnap API", version="0.2.0", lifespan=lifespan)
 
 # The UI runs on another laptop, so allow cross-origin calls on the LAN.
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
@@ -77,8 +87,10 @@ async def log_requests(request: Request, call_next):
 
 
 @app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse(status="ok", method=METHOD, model_loaded=False, n_trips=len(list_trip_ids()))
+def health(request: Request) -> HealthResponse:
+    predictor = request.app.state.predictor
+    return HealthResponse(status="ok", method=predictor.method, model_loaded=predictor.model_loaded,
+                          n_trips=len(list_trip_ids()))
 
 
 @app.get("/trips", response_model=TripsResponse)
@@ -89,11 +101,11 @@ def trips() -> TripsResponse:
 
 
 @app.post("/predict", response_model=PredictResponse)
-def predict(req: PredictRequest) -> PredictResponse:
+def predict(req: PredictRequest, request: Request) -> PredictResponse:
     trip_dir = resolve_trip(req.trip_id)
     start = time.perf_counter()
     try:
-        prediction = predict_trip(trip_dir)
+        prediction = request.app.state.predictor.predict(trip_dir)
         t = time.perf_counter()
         metrics = score_trip(trip_dir, prediction)
         scoring_ms = (time.perf_counter() - t) * 1000
@@ -103,9 +115,10 @@ def predict(req: PredictRequest) -> PredictResponse:
 
     latency = {**prediction["timings"], "scoring": scoring_ms, "total": (time.perf_counter() - start) * 1000}
     log.info(
-        "PREDICT trip=%s | points=%d | route_arcs=%d | route_f1=%.3f | continuity=%s | %.2f s",
-        req.trip_id, len(prediction["obs"]), len(prediction["predicted_arcs"]), metrics["route_f1"],
-        "n/a" if metrics["continuity"] is None else f"{metrics['continuity']:.3f}", latency["total"] / 1000,
+        "PREDICT trip=%s | method=%s | points=%d | route_arcs=%d | top1=%s | route_f1=%s | continuity=%s | %.2f s",
+        req.trip_id, prediction["method"], len(prediction["obs"]), len(prediction["predicted_arcs"]),
+        fmt(metrics["top1_accuracy"]), fmt(metrics["route_f1"]), fmt(metrics["continuity"]),
+        latency["total"] / 1000,
     )
     return PredictResponse(
         trip_id=req.trip_id,

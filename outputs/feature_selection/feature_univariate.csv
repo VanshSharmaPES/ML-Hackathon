@@ -1,0 +1,12 @@
+feature,missing_rate,distinct_values,roc_auc,separability,direction
+distance_rank,0.0,8,0.10869559525116212,0.8913044047488379,lower = more likely correct
+distance_m,0.0,272861,0.12689399443578062,0.8731060055642194,lower = more likely correct
+previous_nearest_distance_m,0.006296666666666617,251155,0.24540728050059793,0.7545927194994021,lower = more likely correct
+heading_difference_deg,0.01322000000000001,296027,0.256631233362338,0.743368766637662,lower = more likely correct
+arc_length_m,0.0,55821,0.6490095361951385,0.6490095361951385,higher = more likely correct
+speed_mps,0.006296666666666617,164709,0.5210366670699098,0.5210366670699098,higher = more likely correct
+time_gap_s,0.00041000000000002146,120,0.5013385771126553,0.5013385771126553,higher = more likely correct
+large_gap,0.0,2,0.5005594748916258,0.5005594748916258,higher = more likely correct
+speed_missing,0.0,2,0.5004932805585987,0.5004932805585987,higher = more likely correct
+heading_missing,0.0,2,0.5002861355850399,0.5002861355850399,higher = more likely correct
+candidate_count,0.0,1,,,

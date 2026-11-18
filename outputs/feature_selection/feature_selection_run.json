@@ -1,0 +1,21 @@
+{
+  "folds": 5,
+  "seed": 42,
+  "repeats": 3,
+  "training_rows": 1667336,
+  "training_trips": 80,
+  "features": [
+    "distance_m",
+    "heading_difference_deg",
+    "speed_mps",
+    "arc_length_m",
+    "distance_rank",
+    "candidate_count",
+    "time_gap_s",
+    "previous_nearest_distance_m",
+    "heading_missing",
+    "speed_missing",
+    "large_gap"
+  ],
+  "elapsed_seconds": 305.8397317079998
+}

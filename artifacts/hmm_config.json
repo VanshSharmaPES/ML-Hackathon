@@ -1,0 +1,9 @@
+{
+  "emission_weight": 0.20198523699751048,
+  "cost_next": 0.0017215506074260145,
+  "cost_two_hop": 5.656867434182339,
+  "cost_twin": 11.339657483166942,
+  "cost_other": 8.65856558057097,
+  "gap_seconds": 5.0,
+  "probability_floor": 1e-06
+}

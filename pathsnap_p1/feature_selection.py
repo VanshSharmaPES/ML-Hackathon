@@ -8,9 +8,9 @@ Answers four questions about the 11 features in pathsnap_p1.features.FEATURES:
 
 Only the 80 training trips are used, with the same trip-grouped GroupKFold folds as
 pathsnap_p1.models.train. The student_test trips are not touched, so no selection
-decision can leak test information. Gaussian NB is used because it refits in about a
-second, which makes 5-fold ablation affordable; importance is model-specific, so the
-results describe what Gaussian NB uses.
+decision can leak test information. Importance is model-specific, so the analysis can be run
+for Gaussian NB (fast, the original check) or for the tuned HistGradientBoosting (the model
+the pipeline serves): `--model gaussian_nb | hist_gradient_boosting_tuned`.
 
 Run after `python -m pathsnap_p1 prepare`:
     python -m pathsnap_p1.feature_selection
@@ -31,12 +31,25 @@ from matplotlib.colors import LinearSegmentedColormap
 from sklearn.base import clone
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import GroupKFold
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.naive_bayes import GaussianNB
 
 from pathsnap_p1.features import FEATURES
 from pathsnap_p1.models import evaluate_predictions, load_prepared, make_pipeline
 
 METRICS = ("macro_f1", "top1_accuracy", "log_loss")
+
+
+def _tuned_hgb(config):
+    best = json.loads((Path(__file__).resolve().parents[1] / "outputs_p2" / "optuna" /
+                       "hist_gradient_boosting_best.json").read_text(encoding="utf-8"))
+    return HistGradientBoostingClassifier(random_state=42, **best["best_parameters"])
+
+
+MODEL_CHOICES = {
+    "gaussian_nb": ("Gaussian NB", lambda config: GaussianNB(var_smoothing=config["gaussian_nb_var_smoothing"])),
+    "hist_gradient_boosting_tuned": ("HistGradientBoosting (tuned)", _tuned_hgb),
+}
 CORRELATION_LIMIT = 0.9      # |rho| at or above this flags a redundant pair
 CORRELATION_SAMPLE = 300_000  # candidate rows sampled for correlation / AUC
 
@@ -157,6 +170,8 @@ def main():
     parser.add_argument("--prepared", help="Output directory of `pathsnap_p1 prepare` (default: config output_dir)")
     parser.add_argument("--output", help="Where to write results (default: <prepared>/feature_selection)")
     parser.add_argument("--repeats", type=int, default=3, help="Permutation repeats per feature per fold")
+    parser.add_argument("--model", choices=sorted(MODEL_CHOICES), default="gaussian_nb",
+                        help="Model whose feature use is measured")
     args = parser.parse_args()
 
     config_path = Path(args.config).resolve()
@@ -184,7 +199,8 @@ def main():
     # 3-4. Permutation importance and drop-one ablation, same folds as the model harness
     folds = min(config["cv_folds"], train.trip_id.nunique())
     splits = list(GroupKFold(n_splits=folds).split(train, train.label, groups=train.trip_id))
-    pipeline = make_pipeline(GaussianNB(var_smoothing=config["gaussian_nb_var_smoothing"]))
+    label = MODEL_CHOICES[args.model][0]
+    pipeline = make_pipeline(MODEL_CHOICES[args.model][1](config))
     perm_rows, abl_rows = [], []
     for fold, (tr, va) in enumerate(splits, 1):
         fit_rows, val_rows = train.iloc[tr], train.iloc[va]
@@ -231,10 +247,10 @@ def main():
     base_mean = base_by_fold[list(METRICS)].mean()
 
     plot_bars(perm_summary, "mean_drop_macro_f1", "sd_drop_macro_f1",
-              "Permutation importance (Gaussian NB)",
+              f"Permutation importance ({label})",
               "Drop in CV Macro F1 when the feature is shuffled", out / "permutation_importance.png")
     plot_bars(abl_summary, "delta_macro_f1", "sd_delta_macro_f1",
-              "Drop-one ablation (Gaussian NB)",
+              f"Drop-one ablation ({label})",
               "Change in CV Macro F1 when the feature is removed", out / "ablation.png", diverging=True)
 
     # Report
@@ -248,7 +264,7 @@ def main():
         "# Feature selection evidence", "",
         f"Training partition only: {train.trip_id.nunique()} trips, {len(train):,} labelled candidate rows. "
         f"{folds}-fold GroupKFold by trip (same folds as `pathsnap_p1.models.train`). Student-test trips not used. "
-        f"Model: Gaussian NB with fold-fitted median imputation and scaling. Seed {seed}.", "",
+        f"Model: {label} with fold-fitted median imputation and scaling. Seed {seed}.", "",
         f"All-feature baseline: CV Macro F1 {base_mean.macro_f1:.4f} (fold SD {noise:.4f}), "
         f"CV Top-1 {base_mean.top1_accuracy:.4f}, CV log loss {base_mean.log_loss:.4f}.", "",
         "## 1. Redundancy (Spearman correlation)", "",
@@ -273,13 +289,16 @@ def main():
         f"Changes are compared with the all-feature model's fold-to-fold SD in Macro F1 ({noise:.4f}).", "",
         f"- Removing these lowers CV Macro F1 by more than one SD (the model needs them): {', '.join(helps) or 'none'}",
         f"- Removing these raises CV Macro F1 by more than one SD (candidates to drop, then re-check on other models): {', '.join(hurts) or 'none'}",
-        f"- Within one SD (no clear effect for Gaussian NB): {', '.join(neutral) or 'none'}",
-        "", "Gaussian NB assumes independent features, so a feature that is neutral here can still matter for "
-        "KNN or tree models. Confirm any removal with the model the team selects before changing `FEATURES`.",
+        f"- Within one SD (no clear effect for {label}): {', '.join(neutral) or 'none'}",
+        "", ("Gaussian NB assumes independent features, so a feature that is neutral or harmful here can still "
+             "matter for KNN or tree models. Compare with the run for the served model before changing `FEATURES`."
+             if args.model == "gaussian_nb" else
+             "This is the model the pipeline serves, so these results are the ones to act on. Removing a "
+             "feature means re-training and re-tuning every model; record any decision in the report."),
         "", f"Runtime: {time.perf_counter() - start:.0f} s.",
     ]
     (out / "FEATURE_SELECTION.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    json.dump({"folds": folds, "seed": seed, "repeats": args.repeats, "training_rows": len(train),
+    json.dump({"model": args.model, "folds": folds, "seed": seed, "repeats": args.repeats, "training_rows": len(train),
                "training_trips": int(train.trip_id.nunique()), "features": FEATURES,
                "elapsed_seconds": time.perf_counter() - start},
               open(out / "feature_selection_run.json", "w"), indent=2)

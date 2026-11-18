@@ -95,6 +95,28 @@ with st.sidebar:
         st.success(f"Connected to {api_url}")
         st.caption(f"Method: **{health['method']}**")
         st.caption(f"Model loaded: {'yes' if health['model_loaded'] else 'no (baseline)'}")
+        info = health.get("model_info") or {}
+        if info:
+            with st.expander("Model details", expanded=True):
+                tuning = info.get("tuning")
+                selection = info.get("selection_metrics")
+                if tuning:
+                    st.caption(f"Tuned with {tuning['method']}, {tuning['trials']} trials. "
+                               f"Objective: {tuning['objective']}.")
+                if selection:
+                    c1, c2 = st.columns(2)
+                    c1.metric("CV Top-1", f"{selection['cv_top1']:.4f}",
+                              help=f"Mean over {selection['folds']} trip-grouped folds of the training trips")
+                    c2.metric("CV log loss", f"{selection['cv_log_loss']:.4f}", help="Tie-break: lower is better")
+                if info.get("selected_by"):
+                    st.caption(f"Selected by {info['selected_by']}.")
+                params = info.get("hyperparameters")
+                if params:
+                    st.caption("Hyperparameters")
+                    st.table({"value": {k: (f"{v:.4g}" if isinstance(v, float) else str(v))
+                                        for k, v in params.items()}})
+                if info.get("trained_on"):
+                    st.caption(f"Trained on {info['trained_on']}.")
         connected = True
     except requests.RequestException as exc:
         st.error(f"Cannot reach the API at {api_url}. Check that Laptop 1 is running uvicorn "

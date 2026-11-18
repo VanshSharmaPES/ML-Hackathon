@@ -231,3 +231,18 @@ def write_model_report(summary,details,run,out):
     lines+=['','## Model comparison interpretation','',comparison_text,'',
             'Inspect the per-trip CSVs and maps before writing team conclusions. All members should verify and understand this generated results draft before submission.']
     (out/'MODEL_REPORT.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+
+
+def rewrite_report(results_dir, source_dir):
+    """Regenerate MODEL_REPORT.md from model_comparison.csv and model_details.json without retraining.
+
+    The run manifest (trip counts) is read from results_dir if present, else from source_dir.
+    """
+    results_dir, source_dir = Path(results_dir), Path(source_dir)
+    summary = pd.read_csv(results_dir / 'model_comparison.csv')
+    details = json.loads((results_dir / 'model_details.json').read_text(encoding='utf-8'))
+    manifest = results_dir / 'run_manifest.json'
+    run = json.loads((manifest if manifest.exists() else source_dir / 'run_manifest.json').read_text(encoding='utf-8'))
+    write_model_report(summary, details, run, results_dir)
+    print(f'Rewrote {results_dir / "MODEL_REPORT.md"}', flush=True)
+

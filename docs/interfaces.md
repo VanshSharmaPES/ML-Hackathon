@@ -30,7 +30,7 @@ How the parts of the pipeline connect. P1's detailed feature and label contract 
 ## 2. Model artifacts (P2, P3 → P4)
 Both files go in `artifacts/`. The API loads them once at startup.
 
-- `model.joblib`: the bundle saved by `pathsnap_p1.models.train` or `optimisation/tuned_vs_untuned.py --export`:
+- `model.joblib`: the bundle saved by `pathsnap_p1.models.train` or `optimisation/select_model.py --export`:
   `{"pipeline": fitted sklearn Pipeline, "features": [...], "configuration": {...}, ...}`.
   The pipeline must have `predict_proba` with class `1` = "this candidate is the correct arc".
   Optionally add `"model_name": "<name>"` for display; otherwise the classifier's class name is shown.
@@ -64,7 +64,11 @@ def decode(candidates, probs, trip, cfg) -> dict[int, int]:
 Never reads `.route`. `python -m inference.cli <trip_dir>` runs it without the API.
 
 ## 5. API (P4)
-`GET /health` → `{"status": "ok", "method": str, "model_loaded": bool, "n_trips": int}`
+`GET /health` → `{"status": "ok", "method": str, "model_loaded": bool, "n_trips": int, "model_info": {...} | null}`
+
+`model_info` (null for the baseline) comes from the model bundle: `model_name`, `hyperparameters`, `selected_by`,
+`selection_metrics` (`cv_top1`, `cv_log_loss`, `cv_macro_f1`, `folds`), `tuning` (`method`, `trials`, `objective`), `trained_on`.
+The UI sidebar shows it under "Model details".
 
 `GET /trips` → `{"trips": [{"trip_id": str, "n_points": int}]}`
 

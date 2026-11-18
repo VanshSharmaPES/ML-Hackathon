@@ -1,0 +1,62 @@
+{
+  "config": {
+    "projection": "auto_utm",
+    "gap_seconds": 5.0,
+    "stationary_threshold_m": 1.0,
+    "alignment_warning_distance_m": 50.0,
+    "index_spacing_m": 50.0,
+    "candidate_radii_m": [
+      25.0,
+      50.0,
+      100.0
+    ],
+    "candidate_top_k": [
+      3,
+      5,
+      8
+    ],
+    "final_top_k": 8,
+    "cv_folds": 5,
+    "random_seed": 42,
+    "knn_neighbors": 15,
+    "knn_weights": "distance",
+    "gaussian_nb_var_smoothing": 1e-09
+  },
+  "source_manifest_sha256": "76b711e7e1eb20ca77e8e74c4fe8f41a39d1ff30870b7c7712757b76ccf5b46c",
+  "features": [
+    "distance_m",
+    "heading_difference_deg",
+    "speed_mps",
+    "arc_length_m",
+    "distance_rank",
+    "candidate_count",
+    "time_gap_s",
+    "previous_nearest_distance_m",
+    "heading_missing",
+    "speed_missing",
+    "large_gap"
+  ],
+  "parameters": {
+    "random_forest": {
+      "bootstrap": true,
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 20,
+      "max_features": "sqrt",
+      "max_leaf_nodes": null,
+      "max_samples": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 2,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "n_estimators": 100,
+      "n_jobs": 2,
+      "oob_score": false,
+      "random_state": 42,
+      "verbose": 0,
+      "warm_start": false
+    }
+  }
+}

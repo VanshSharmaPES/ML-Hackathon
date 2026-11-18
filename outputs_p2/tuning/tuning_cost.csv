@@ -1,0 +1,3 @@
+model,trials_complete,trials_failed,search_minutes,seconds_per_trial
+logistic_regression,50,0,18.4,22.1
+hist_gradient_boosting,50,1,62.5,74.4

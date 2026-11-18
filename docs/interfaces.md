@@ -30,7 +30,7 @@ How the parts of the pipeline connect. P1's detailed feature and label contract 
 ## 2. Model artifacts (P2, P3 → P4)
 Both files go in `artifacts/`. The API loads them once at startup.
 
-- `model.joblib`: the bundle saved by `pathsnap_p1.models.train`:
+- `model.joblib`: the bundle saved by `pathsnap_p1.models.train` or `optimisation/tuned_vs_untuned.py --export`:
   `{"pipeline": fitted sklearn Pipeline, "features": [...], "configuration": {...}, ...}`.
   The pipeline must have `predict_proba` with class `1` = "this candidate is the correct arc".
   Optionally add `"model_name": "<name>"` for display; otherwise the classifier's class name is shown.
@@ -38,7 +38,13 @@ Both files go in `artifacts/`. The API loads them once at startup.
   the training settings.
 - `hmm_config.json`: emission / transition / gap parameters for the decoder.
 
-Neither present → API serves the nearest-arc baseline. Only one present → API refuses to start.
+| In `artifacts/` | API method |
+|---|---|
+| nothing | nearest-arc baseline |
+| `model.joblib` | `<model_name>, classifier only`: highest-scoring candidate per point (ties: lower `distance_rank`, then lower arc ID, as in training Top-1) |
+| `model.joblib` + `hmm_config.json` | `<model_name> + HMM/Viterbi` (refuses to start if `hmm/viterbi.py` is missing) |
+| `hmm_config.json` only | refuses to start |
+
 Train the final model with the pinned `requirements.txt`, or it may not load on the API laptop.
 
 ## 3. Decoder (P3 → P4)
@@ -55,7 +61,7 @@ def decode(candidates, probs, trip, cfg) -> dict[int, int]:
 
 ## 4. Inference (P4)
 `inference.pipeline.Predictor(artifacts, pipeline_config).predict(trip_dir) -> (prediction, trip)`.
-Never reads `.route`.
+Never reads `.route`. `python -m inference.cli <trip_dir>` runs it without the API.
 
 ## 5. API (P4)
 `GET /health` → `{"status": "ok", "method": str, "model_loaded": bool, "n_trips": int}`
@@ -71,7 +77,7 @@ Never reads `.route`.
   "predicted_arc_per_obs": [12, 12, 13],
   "predicted_arcs": [12, 13, 57],
   "geojson": {"type": "FeatureCollection", "features": []},
-  "metrics": {"top1_accuracy": 0.0, "route_precision": 0.0, "route_recall": 0.0,
+  "metrics": {"scored": true, "top1_accuracy": 0.0, "route_precision": 0.0, "route_recall": 0.0,
               "route_f1": 0.0, "continuity": 0.0},
   "latency_ms": {"load": 0, "matching": 0, "scoring": 0, "total": 0}
 }
@@ -80,7 +86,10 @@ Never reads `.route`.
 - `obs` and `predicted_arc_per_obs` follow the cleaned chronological order (exact duplicate GPS rows removed).
 - `predicted_arc_per_obs` uses `-1` for points with no arc; `predicted_arcs` drops those and collapses repeats.
 - `latency_ms` keys follow the pipeline stages (`candidates`, `model`, `viterbi` for the full pipeline); `total` is always present.
-- Errors: 404 unknown trip, 422 malformed trip ID, 500 pipeline failure.
+- Reference routes are read from `REFERENCE_DIR/<trip_id>/<trip_id>.route` (default: next to the track in `EVAL_DIR`).
+  A trip without one is still predicted: `scored` is `false`, the accuracy fields are `null`, continuity is still given.
+- Errors: 404 unknown trip, 422 malformed trip ID, 500 pipeline failure (including a reference route that names invalid arcs).
+- `python -m api.e2e_check --api <url>` runs every trip through a running API and writes a CSV.
 
 The response never contains reference-route arcs or geometry. Metrics are computed on the server.
 

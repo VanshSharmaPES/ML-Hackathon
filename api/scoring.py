@@ -6,6 +6,11 @@ leave this module: only summary metrics are returned to the caller.
 Per-point reference arcs come from P1's alignment (pathsnap_p1.alignment),
 the same function that produced the training labels, so the API's Top-1
 accuracy means exactly what the report's Top-1 accuracy means.
+
+Reference routes are looked up in REFERENCE_DIR/<trip_id>/<trip_id>.route
+(REFERENCE_DIR defaults to EVAL_DIR, i.e. next to the .track file). If a trip
+has no reference route, it is still predicted; accuracy metrics are then None
+and `scored` is False. Continuity needs no reference and is always computed.
 """
 from __future__ import annotations
 
@@ -17,9 +22,14 @@ import numpy as np
 from pathsnap_p1.alignment import align_reference
 from pathsnap_p1.data import Trip
 
+from . import config
 
-def load_reference_route(trip_dir: Path, trip: Trip) -> np.ndarray:
-    path = trip_dir / f"{trip_dir.name}.route"
+
+def reference_file(trip_id: str) -> Path:
+    return config.REFERENCE_DIR / trip_id / f"{trip_id}.route"
+
+
+def load_reference_route(path: Path, trip: Trip) -> np.ndarray:
     route = np.array([int(line) for line in path.read_text().split()], dtype=np.int64)
     valid = trip.arcs.valid.to_numpy()
     if len(route) == 0 or route.min() < 0 or route.max() >= len(valid) or not valid[route].all():
@@ -56,13 +66,18 @@ def top1_accuracy(predicted_arc_per_obs: list[int], reference_arc_per_obs: np.nd
     return float(np.mean(predicted[labelled] == reference_arc_per_obs[labelled]))
 
 
-def score_trip(trip_dir: Path, trip: Trip, prediction: dict, config: dict) -> dict:
-    reference = load_reference_route(trip_dir, trip)
+def score_trip(trip_dir: Path, trip: Trip, prediction: dict, pipeline_config: dict) -> dict:
+    route = prediction["predicted_arcs"]
+    path = reference_file(trip_dir.name)
+    if not path.is_file():
+        return {"scored": False, "top1_accuracy": None, "route_precision": None, "route_recall": None,
+                "route_f1": None, "continuity": continuity(route, trip)}
+    reference = load_reference_route(path, trip)
     # The trip was loaded for prediction without its reference. Attach the route to a
     # copy, here on the server only, so P1's alignment can label each point.
-    labels = align_reference(dataclasses.replace(trip, route=reference), config)
-    route = prediction["predicted_arcs"]
+    labels = align_reference(dataclasses.replace(trip, route=reference), pipeline_config)
     return {
+        "scored": True,
         "top1_accuracy": top1_accuracy(prediction["predicted_arc_per_obs"], labels.reference_arc_id.to_numpy()),
         **route_overlap(route, reference.tolist()),
         "continuity": continuity(route, trip),

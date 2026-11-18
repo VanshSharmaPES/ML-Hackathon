@@ -71,10 +71,26 @@ into the UTM zone of its own GPS track (`pathsnap_p1/geometry.py`).
    python -m pathsnap_p1 train
    ```
    Writes `outputs/model_comparison.csv`, `outputs/cv_results.csv`, `outputs/MODEL_REPORT.md`.
-3. **Interactive maps (P1)**: `python -m pathsnap_p1 maps`
-4. **Further models (P2)**: pass estimators to `pathsnap_p1.models.train` (see `HANDOVER.md`).
-5. **Bayesian optimisation (P2)**: _TODO_
-6. **HMM / Viterbi decoding and comparison (P3)**: _TODO_
+3. **Feature selection evidence (P1)**: correlation, single-feature AUC, permutation importance and
+   drop-one ablation on the training trips (about 9 minutes; prepares into a temporary folder so the
+   committed `outputs/` files are not overwritten):
+   ```bash
+   python -m pathsnap_p1 prepare --output /tmp/pathsnap-prepared
+   python -m pathsnap_p1.feature_selection --prepared /tmp/pathsnap-prepared --output outputs/feature_selection
+   ```
+   Writes `outputs/feature_selection/FEATURE_SELECTION.md` and its figures.
+4. **Interactive maps (P1)**: `python -m pathsnap_p1 maps`
+5. **Further models (P2)**: Logistic Regression and HistGradientBoosting through the same harness:
+   `python train_p2_baselines.py` (results in `outputs_p2/`).
+6. **Bayesian optimisation (P2)**: Optuna TPE, 50 trials per model, 5-fold trip-grouped CV Macro F1 on the
+   training trips: `python tune_p2_optuna.py` (trials and best parameters in `outputs_p2/optuna/`).
+   Then compare untuned vs tuned on the same folds and student_test trips, and export the selected
+   tuned model to `artifacts/model.joblib` (about 10 minutes):
+   ```bash
+   python -m optimisation.tuned_vs_untuned --prepared /tmp/pathsnap-prepared --export
+   ```
+   Writes `outputs_p2/tuning/TUNING_REPORT.md`, `tuned_vs_untuned.csv`, `tuning_cost.csv` and figures.
+7. **HMM / Viterbi decoding and comparison (P3)**: _TODO_
 
 Quick isolated check: `python -m pathsnap_p1 all --limit 2 --output outputs/smoke --folds 2`.
 
@@ -90,8 +106,12 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log
 
 - Serves the trips in `EVAL_DIR` (default `data/student_test`). For evaluation:
   `EVAL_DIR=/path/to/eval_trips uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log`
+- Reference routes for server-side scoring are read from `REFERENCE_DIR` (default: the same trip folders).
+  If they are supplied separately: `REFERENCE_DIR=/path/to/routes`. Trips without a reference route are
+  still predicted; their accuracy metrics show as unavailable.
 - Every request is logged in this terminal.
-- Uses the model in `artifacts/` (`model.joblib`, `hmm_config.json`) when present; otherwise serves the nearest-arc baseline. `/health` shows which.
+- Serving method depends on `artifacts/`: `model.joblib` alone → classifier only; plus `hmm_config.json`
+  → classifier + HMM/Viterbi; nothing → nearest-arc baseline. `/health`, the logs and the UI show which.
 - Interactive docs: `http://<laptop1-ip>:8000/docs`
 - Fedora firewall: `sudo firewall-cmd --add-port=8000/tcp`
 
@@ -103,9 +123,25 @@ curl http://localhost:8000/trips
 curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"trip_id": "00000040"}'
 ```
 
+End-to-end check of every trip (run it on Laptop 2 for the two-laptop test):
+
+```bash
+python -m api.e2e_check --api http://<laptop1-ip>:8000 --out outputs/e2e_student_test.csv
+```
+
+Predict one trip without the API (debugging): `python -m inference.cli data/student_test/00000040`
+
 ### UI (Laptop 2)
 
-_TODO_
+From the repo root, with the venv active:
+
+```bash
+API_URL=http://<laptop1-ip>:8000 streamlit run ui/app.py --server.address 0.0.0.0 --server.port 8501
+```
+
+- Open `http://localhost:8501` on Laptop 2.
+- The API address can also be changed in the sidebar.
+- The UI shows raw GPS points, the predicted route and the server-computed metrics. It never receives the reference route.
 
 ## AI-use disclosure
 

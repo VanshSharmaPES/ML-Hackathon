@@ -44,6 +44,9 @@ data/
 
 Set `DATA_DIR` if the data lives elsewhere (default: `./data`).
 
+Trips come from many countries (24 UTM zones, both hemispheres), so every trip
+is projected into the UTM zone of its own GPS track (`inference/geo.py`).
+
 ## Reproducing the results
 
 _TODO: exact commands, filled in as each stage is finished._
@@ -57,7 +60,31 @@ _TODO: exact commands, filled in as each stage is finished._
 
 ## Running the system
 
-_TODO: Laptop 1 API command, Laptop 2 UI command, firewall notes._
+### API (Laptop 1)
+
+From the repo root, with the venv active:
+
+```bash
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log
+```
+
+- Serves the trips in `EVAL_DIR` (default `data/student_test`). For evaluation:
+  `EVAL_DIR=/path/to/eval_trips uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log`
+- Every request is logged in this terminal.
+- Interactive docs: `http://<laptop1-ip>:8000/docs`
+- Fedora firewall: `sudo firewall-cmd --add-port=8000/tcp`
+
+Quick check:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/trips
+curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"trip_id": "00000040"}'
+```
+
+### UI (Laptop 2)
+
+_TODO_
 
 ## AI-use disclosure
 

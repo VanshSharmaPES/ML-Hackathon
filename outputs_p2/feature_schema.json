@@ -1,0 +1,27 @@
+{
+  "features": [
+    "distance_m",
+    "heading_difference_deg",
+    "speed_mps",
+    "arc_length_m",
+    "distance_rank",
+    "candidate_count",
+    "time_gap_s",
+    "previous_nearest_distance_m",
+    "heading_missing",
+    "speed_missing",
+    "large_gap"
+  ],
+  "key": [
+    "split",
+    "trip_id",
+    "observation_id",
+    "candidate_arc_id"
+  ],
+  "label": "1 = matches derived reference arc; 0 = other; -1 = reference unavailable",
+  "projection": "Per-trip EPSG recorded in candidates and metadata; never compare x/y across trips.",
+  "previous_nearest_distance_m": "Euclidean distance between previous GPS nearest-road projection and current candidate projection; missing across gaps/invalid dt.",
+  "missing_policy": "Preserved as NaN; model-specific imputation learned within each training fold.",
+  "selection": "Fixed top-8 road candidates by exact finite-segment distance; no ground-truth injection.",
+  "alignment": "Monotonic route-occurrence DP; derived labels are imperfect and may favour distance-based methods."
+}

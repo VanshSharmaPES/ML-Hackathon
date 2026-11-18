@@ -1,0 +1,10 @@
+numpy>=2.2,<3
+pandas>=2.2,<4
+scipy>=1.15,<2
+scikit-learn>=1.6,<2
+matplotlib>=3.9,<4
+pyarrow>=19
+joblib>=1.4
+pyproj>=3.7
+folium>=0.19
+pytest>=8

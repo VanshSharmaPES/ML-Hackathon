@@ -1,0 +1,18 @@
+{
+  "data_root": "../../Student folder/Student folder",
+  "output_dir": "outputs",
+  "projection": "auto_utm",
+  "gap_seconds": 5.0,
+  "stationary_threshold_m": 1.0,
+  "alignment_warning_distance_m": 50.0,
+  "index_spacing_m": 50.0,
+  "candidate_radii_m": [25.0, 50.0, 100.0],
+  "candidate_top_k": [3, 5, 8],
+  "final_top_k": 8,
+  "cv_folds": 5,
+  "random_seed": 42,
+  "knn_neighbors": 15,
+  "knn_weights": "distance",
+  "gaussian_nb_var_smoothing": 1e-9,
+  "maps_per_partition": 2
+}

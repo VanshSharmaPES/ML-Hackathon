@@ -146,6 +146,9 @@ metrics = result["metrics"]
 latency = result["latency_ms"]
 st.subheader(f"Trip {result['trip_id']}")
 st.caption(f"Predicted by: **{result['method']}**")
+if not metrics.get("scored", True):
+    st.warning("The API has no reference route for this trip, so accuracy metrics are not available. "
+               "The predicted route and continuity are still shown.")
 
 cols = st.columns(6)
 cols[0].metric("Top-1 accuracy", pct(metrics["top1_accuracy"]))

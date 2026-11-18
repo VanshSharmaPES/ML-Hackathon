@@ -98,6 +98,9 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log
 
 - Serves the trips in `EVAL_DIR` (default `data/student_test`). For evaluation:
   `EVAL_DIR=/path/to/eval_trips uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-access-log`
+- Reference routes for server-side scoring are read from `REFERENCE_DIR` (default: the same trip folders).
+  If they are supplied separately: `REFERENCE_DIR=/path/to/routes`. Trips without a reference route are
+  still predicted; their accuracy metrics show as unavailable.
 - Every request is logged in this terminal.
 - Uses the model in `artifacts/` (`model.joblib`, `hmm_config.json`) when present; otherwise serves the nearest-arc baseline. `/health` shows which.
 - Interactive docs: `http://<laptop1-ip>:8000/docs`
@@ -110,6 +113,14 @@ curl http://localhost:8000/health
 curl http://localhost:8000/trips
 curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"trip_id": "00000040"}'
 ```
+
+End-to-end check of every trip (run it on Laptop 2 for the two-laptop test):
+
+```bash
+python -m api.e2e_check --api http://<laptop1-ip>:8000 --out outputs/e2e_student_test.csv
+```
+
+Predict one trip without the API (debugging): `python -m inference.cli data/student_test/00000040`
 
 ### UI (Laptop 2)
 

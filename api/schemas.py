@@ -35,11 +35,13 @@ class Observation(BaseModel):
 
 
 class Metrics(BaseModel):
-    # None until P1's point-to-route alignment provides per-point labels
+    # scored is False when the server has no reference route for the trip; the
+    # accuracy fields are then None. Continuity needs no reference.
+    scored: bool = True
     top1_accuracy: Optional[float] = None
-    route_precision: float
-    route_recall: float
-    route_f1: float
+    route_precision: Optional[float] = None
+    route_recall: Optional[float] = None
+    route_f1: Optional[float] = None
     continuity: Optional[float] = None
 
 

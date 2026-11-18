@@ -18,7 +18,7 @@ from inference.pipeline import Predictor
 
 from . import config
 from .schemas import HealthResponse, PredictRequest, PredictResponse, TripInfo, TripsResponse
-from .scoring import score_trip
+from .scoring import reference_file, score_trip
 
 logging.basicConfig(
     level=logging.INFO,
@@ -70,11 +70,17 @@ async def lifespan(app: FastAPI):
         log.warning("No model in %s. Serving the nearest-arc baseline.", config.ARTIFACTS_DIR)
     if not trips:
         log.warning("No trips found in %s. Set EVAL_DIR to the folder holding the trip folders.", config.EVAL_DIR)
+    unscored = [tid for tid in trips if not reference_file(tid).is_file()]
+    if config.REFERENCE_DIR != config.EVAL_DIR:
+        log.info("Reference routes read from %s", config.REFERENCE_DIR)
+    if unscored:
+        log.warning("%d of %d trips have no reference route in %s; they will be predicted but not scored",
+                    len(unscored), len(trips), config.REFERENCE_DIR)
     yield
     log.info("PathSnap API stopped")
 
 
-app = FastAPI(title="PathSnap API", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="PathSnap API", version="0.4.0", lifespan=lifespan)
 
 # The UI runs on another laptop, so allow cross-origin calls on the LAN.
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
@@ -130,6 +136,9 @@ def predict(req: PredictRequest, request: Request) -> PredictResponse:
         fmt(metrics["top1_accuracy"]), fmt(metrics["route_f1"]), fmt(metrics["continuity"]),
         latency["total"] / 1000,
     )
+    if not metrics["scored"]:
+        log.warning("Trip %s has no reference route in %s: accuracy metrics unavailable",
+                    req.trip_id, config.REFERENCE_DIR)
     return PredictResponse(
         trip_id=req.trip_id,
         method=prediction["method"],

@@ -1,0 +1,30 @@
+# Personal task notes (not part of the submission)
+tasks/
+
+# Raw and derived data: keep out of the public repo
+# (sharing derived datasets between teams is prohibited, and the raw data is ~120 MB)
+data/
+Student folder/
+*.zip
+*.parquet
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Secrets and local config (never commit credentials)
+.env
+.env.*
+*.pem
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# NOTE: artifacts/ (model weights, configs) and results/ (CSV logs, plots)
+# are intentionally NOT ignored. The deliverables require them in the repo.

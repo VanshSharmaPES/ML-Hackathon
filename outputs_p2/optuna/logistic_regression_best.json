@@ -1,0 +1,16 @@
+{
+    "model": "logistic_regression",
+    "best_macro_f1": 0.8297130406090953,
+    "best_parameters": {
+        "C": 5.2908100069206485,
+        "class_weight": null
+    },
+    "best_fold_scores": [
+        0.8009184150516515,
+        0.8198391947955702,
+        0.8186302905502412,
+        0.8628385418061517,
+        0.8463387608418618
+    ],
+    "completed_trials": 50
+}

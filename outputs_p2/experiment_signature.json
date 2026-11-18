@@ -1,0 +1,80 @@
+{
+  "config": {
+    "projection": "auto_utm",
+    "gap_seconds": 5.0,
+    "stationary_threshold_m": 1.0,
+    "alignment_warning_distance_m": 50.0,
+    "index_spacing_m": 50.0,
+    "candidate_radii_m": [
+      25.0,
+      50.0,
+      100.0
+    ],
+    "candidate_top_k": [
+      3,
+      5,
+      8
+    ],
+    "final_top_k": 8,
+    "cv_folds": 5,
+    "random_seed": 42,
+    "knn_neighbors": 15,
+    "knn_weights": "distance",
+    "gaussian_nb_var_smoothing": 1e-09
+  },
+  "source_manifest_sha256": "76b711e7e1eb20ca77e8e74c4fe8f41a39d1ff30870b7c7712757b76ccf5b46c",
+  "features": [
+    "distance_m",
+    "heading_difference_deg",
+    "speed_mps",
+    "arc_length_m",
+    "distance_rank",
+    "candidate_count",
+    "time_gap_s",
+    "previous_nearest_distance_m",
+    "heading_missing",
+    "speed_missing",
+    "large_gap"
+  ],
+  "parameters": {
+    "logistic_regression": {
+      "C": 1.0,
+      "class_weight": null,
+      "dual": false,
+      "fit_intercept": true,
+      "intercept_scaling": 1,
+      "l1_ratio": 0.0,
+      "max_iter": 2000,
+      "n_jobs": null,
+      "penalty": "deprecated",
+      "random_state": 42,
+      "solver": "lbfgs",
+      "tol": 0.0001,
+      "verbose": 0,
+      "warm_start": false
+    },
+    "hist_gradient_boosting": {
+      "categorical_features": "from_dtype",
+      "class_weight": null,
+      "early_stopping": "auto",
+      "interaction_cst": null,
+      "l2_regularization": 0.0,
+      "learning_rate": 0.1,
+      "loss": "log_loss",
+      "max_bins": 255,
+      "max_depth": null,
+      "max_features": 1.0,
+      "max_iter": 100,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "monotonic_cst": null,
+      "n_iter_no_change": 10,
+      "random_state": 42,
+      "scoring": "loss",
+      "tol": 1e-07,
+      "validation_fraction": 0.1,
+      "verbose": 0,
+      "warm_start": false
+    }
+  }
+}

@@ -1,0 +1,600 @@
+{
+  "config": {
+    "data_root": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\Student folder\\Student folder",
+    "output_dir": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2",
+    "projection": "auto_utm",
+    "gap_seconds": 5.0,
+    "stationary_threshold_m": 1.0,
+    "alignment_warning_distance_m": 50.0,
+    "index_spacing_m": 50.0,
+    "candidate_radii_m": [
+      25.0,
+      50.0,
+      100.0
+    ],
+    "candidate_top_k": [
+      3,
+      5,
+      8
+    ],
+    "final_top_k": 8,
+    "cv_folds": 5,
+    "random_seed": 42,
+    "knn_neighbors": 15,
+    "knn_weights": "distance",
+    "gaussian_nb_var_smoothing": 1e-09,
+    "maps_per_partition": 2
+  },
+  "trips": [
+    {
+      "split": "train",
+      "trip_id": "00000001",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000001",
+      "candidate_rows": 10520
+    },
+    {
+      "split": "train",
+      "trip_id": "00000002",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000002",
+      "candidate_rows": 57944
+    },
+    {
+      "split": "train",
+      "trip_id": "00000003",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000003",
+      "candidate_rows": 6568
+    },
+    {
+      "split": "train",
+      "trip_id": "00000004",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000004",
+      "candidate_rows": 8512
+    },
+    {
+      "split": "train",
+      "trip_id": "00000005",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000005",
+      "candidate_rows": 8360
+    },
+    {
+      "split": "train",
+      "trip_id": "00000006",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000006",
+      "candidate_rows": 11600
+    },
+    {
+      "split": "train",
+      "trip_id": "00000008",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000008",
+      "candidate_rows": 24744
+    },
+    {
+      "split": "train",
+      "trip_id": "00000010",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000010",
+      "candidate_rows": 21688
+    },
+    {
+      "split": "train",
+      "trip_id": "00000011",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000011",
+      "candidate_rows": 22624
+    },
+    {
+      "split": "train",
+      "trip_id": "00000012",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000012",
+      "candidate_rows": 12864
+    },
+    {
+      "split": "train",
+      "trip_id": "00000013",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000013",
+      "candidate_rows": 20640
+    },
+    {
+      "split": "train",
+      "trip_id": "00000014",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000014",
+      "candidate_rows": 3584
+    },
+    {
+      "split": "train",
+      "trip_id": "00000016",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000016",
+      "candidate_rows": 10440
+    },
+    {
+      "split": "train",
+      "trip_id": "00000018",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000018",
+      "candidate_rows": 3032
+    },
+    {
+      "split": "train",
+      "trip_id": "00000019",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000019",
+      "candidate_rows": 18832
+    },
+    {
+      "split": "train",
+      "trip_id": "00000020",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000020",
+      "candidate_rows": 18824
+    },
+    {
+      "split": "train",
+      "trip_id": "00000021",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000021",
+      "candidate_rows": 126264
+    },
+    {
+      "split": "train",
+      "trip_id": "00000022",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000022",
+      "candidate_rows": 3792
+    },
+    {
+      "split": "train",
+      "trip_id": "00000024",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000024",
+      "candidate_rows": 6408
+    },
+    {
+      "split": "train",
+      "trip_id": "00000025",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000025",
+      "candidate_rows": 9432
+    },
+    {
+      "split": "train",
+      "trip_id": "00000026",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000026",
+      "candidate_rows": 2888
+    },
+    {
+      "split": "train",
+      "trip_id": "00000027",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000027",
+      "candidate_rows": 5552
+    },
+    {
+      "split": "train",
+      "trip_id": "00000028",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000028",
+      "candidate_rows": 28520
+    },
+    {
+      "split": "train",
+      "trip_id": "00000029",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000029",
+      "candidate_rows": 5864
+    },
+    {
+      "split": "train",
+      "trip_id": "00000031",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000031",
+      "candidate_rows": 33960
+    },
+    {
+      "split": "train",
+      "trip_id": "00000032",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000032",
+      "candidate_rows": 19712
+    },
+    {
+      "split": "train",
+      "trip_id": "00000033",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000033",
+      "candidate_rows": 46752
+    },
+    {
+      "split": "train",
+      "trip_id": "00000034",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000034",
+      "candidate_rows": 28912
+    },
+    {
+      "split": "train",
+      "trip_id": "00000035",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000035",
+      "candidate_rows": 13144
+    },
+    {
+      "split": "train",
+      "trip_id": "00000036",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000036",
+      "candidate_rows": 10944
+    },
+    {
+      "split": "train",
+      "trip_id": "00000037",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000037",
+      "candidate_rows": 5416
+    },
+    {
+      "split": "train",
+      "trip_id": "00000038",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000038",
+      "candidate_rows": 10296
+    },
+    {
+      "split": "train",
+      "trip_id": "00000039",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000039",
+      "candidate_rows": 2904
+    },
+    {
+      "split": "train",
+      "trip_id": "00000041",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000041",
+      "candidate_rows": 8152
+    },
+    {
+      "split": "train",
+      "trip_id": "00000042",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000042",
+      "candidate_rows": 61912
+    },
+    {
+      "split": "train",
+      "trip_id": "00000043",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000043",
+      "candidate_rows": 18576
+    },
+    {
+      "split": "train",
+      "trip_id": "00000044",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000044",
+      "candidate_rows": 4368
+    },
+    {
+      "split": "train",
+      "trip_id": "00000045",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000045",
+      "candidate_rows": 5120
+    },
+    {
+      "split": "train",
+      "trip_id": "00000046",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000046",
+      "candidate_rows": 11208
+    },
+    {
+      "split": "train",
+      "trip_id": "00000047",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000047",
+      "candidate_rows": 10176
+    },
+    {
+      "split": "train",
+      "trip_id": "00000048",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000048",
+      "candidate_rows": 9920
+    },
+    {
+      "split": "train",
+      "trip_id": "00000050",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000050",
+      "candidate_rows": 4144
+    },
+    {
+      "split": "train",
+      "trip_id": "00000051",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000051",
+      "candidate_rows": 7872
+    },
+    {
+      "split": "train",
+      "trip_id": "00000053",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000053",
+      "candidate_rows": 10432
+    },
+    {
+      "split": "train",
+      "trip_id": "00000054",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000054",
+      "candidate_rows": 154504
+    },
+    {
+      "split": "train",
+      "trip_id": "00000055",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000055",
+      "candidate_rows": 19776
+    },
+    {
+      "split": "train",
+      "trip_id": "00000057",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000057",
+      "candidate_rows": 13160
+    },
+    {
+      "split": "train",
+      "trip_id": "00000058",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000058",
+      "candidate_rows": 4792
+    },
+    {
+      "split": "train",
+      "trip_id": "00000060",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000060",
+      "candidate_rows": 6832
+    },
+    {
+      "split": "train",
+      "trip_id": "00000061",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000061",
+      "candidate_rows": 11440
+    },
+    {
+      "split": "train",
+      "trip_id": "00000062",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000062",
+      "candidate_rows": 27024
+    },
+    {
+      "split": "train",
+      "trip_id": "00000063",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000063",
+      "candidate_rows": 22248
+    },
+    {
+      "split": "train",
+      "trip_id": "00000064",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000064",
+      "candidate_rows": 16744
+    },
+    {
+      "split": "train",
+      "trip_id": "00000066",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000066",
+      "candidate_rows": 34600
+    },
+    {
+      "split": "train",
+      "trip_id": "00000068",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000068",
+      "candidate_rows": 5976
+    },
+    {
+      "split": "train",
+      "trip_id": "00000069",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000069",
+      "candidate_rows": 16536
+    },
+    {
+      "split": "train",
+      "trip_id": "00000070",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000070",
+      "candidate_rows": 16608
+    },
+    {
+      "split": "train",
+      "trip_id": "00000071",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000071",
+      "candidate_rows": 6800
+    },
+    {
+      "split": "train",
+      "trip_id": "00000072",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000072",
+      "candidate_rows": 7752
+    },
+    {
+      "split": "train",
+      "trip_id": "00000074",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000074",
+      "candidate_rows": 15432
+    },
+    {
+      "split": "train",
+      "trip_id": "00000075",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000075",
+      "candidate_rows": 13024
+    },
+    {
+      "split": "train",
+      "trip_id": "00000078",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000078",
+      "candidate_rows": 23272
+    },
+    {
+      "split": "train",
+      "trip_id": "00000079",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000079",
+      "candidate_rows": 5512
+    },
+    {
+      "split": "train",
+      "trip_id": "00000080",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000080",
+      "candidate_rows": 20080
+    },
+    {
+      "split": "train",
+      "trip_id": "00000081",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000081",
+      "candidate_rows": 25792
+    },
+    {
+      "split": "train",
+      "trip_id": "00000082",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000082",
+      "candidate_rows": 34144
+    },
+    {
+      "split": "train",
+      "trip_id": "00000083",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000083",
+      "candidate_rows": 12056
+    },
+    {
+      "split": "train",
+      "trip_id": "00000084",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000084",
+      "candidate_rows": 128248
+    },
+    {
+      "split": "train",
+      "trip_id": "00000085",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000085",
+      "candidate_rows": 8736
+    },
+    {
+      "split": "train",
+      "trip_id": "00000086",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000086",
+      "candidate_rows": 33144
+    },
+    {
+      "split": "train",
+      "trip_id": "00000088",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000088",
+      "candidate_rows": 7008
+    },
+    {
+      "split": "train",
+      "trip_id": "00000089",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000089",
+      "candidate_rows": 9824
+    },
+    {
+      "split": "train",
+      "trip_id": "00000090",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000090",
+      "candidate_rows": 4288
+    },
+    {
+      "split": "train",
+      "trip_id": "00000092",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000092",
+      "candidate_rows": 63136
+    },
+    {
+      "split": "train",
+      "trip_id": "00000093",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000093",
+      "candidate_rows": 9688
+    },
+    {
+      "split": "train",
+      "trip_id": "00000095",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000095",
+      "candidate_rows": 12408
+    },
+    {
+      "split": "train",
+      "trip_id": "00000096",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000096",
+      "candidate_rows": 26168
+    },
+    {
+      "split": "train",
+      "trip_id": "00000097",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000097",
+      "candidate_rows": 13920
+    },
+    {
+      "split": "train",
+      "trip_id": "00000098",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000098",
+      "candidate_rows": 44672
+    },
+    {
+      "split": "train",
+      "trip_id": "00000099",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\train\\00000099",
+      "candidate_rows": 18576
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000000",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000000",
+      "candidate_rows": 20024
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000007",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000007",
+      "candidate_rows": 10832
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000009",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000009",
+      "candidate_rows": 8392
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000040",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000040",
+      "candidate_rows": 23960
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000052",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000052",
+      "candidate_rows": 2096
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000056",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000056",
+      "candidate_rows": 31664
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000065",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000065",
+      "candidate_rows": 6144
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000076",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000076",
+      "candidate_rows": 11888
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000077",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000077",
+      "candidate_rows": 31288
+    },
+    {
+      "split": "student_test",
+      "trip_id": "00000091",
+      "directory": "C:\\Users\\Tanushree p\\OneDrive\\Desktop\\ML\\hackaton\\ML-Hackathon\\outputs_p2\\processed\\student_test\\00000091",
+      "candidate_rows": 6992
+    }
+  ],
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "3.1.1",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2",
+    "pyarrow": "26.0.1",
+    "joblib": "1.6.0",
+    "pyproj": "not installed",
+    "folium": "not installed"
+  },
+  "warnings": [
+    "Folium unavailable: static maps generated; interactive maps pending. Install requirements and run maps."
+  ],
+  "elapsed_seconds": 149.80107640003553,
+  "limited_run": false,
+  "interactive_maps_generated": false,
+  "features": [
+    "distance_m",
+    "heading_difference_deg",
+    "speed_mps",
+    "arc_length_m",
+    "distance_rank",
+    "candidate_count",
+    "time_gap_s",
+    "previous_nearest_distance_m",
+    "heading_missing",
+    "speed_missing",
+    "large_gap"
+  ]
+}

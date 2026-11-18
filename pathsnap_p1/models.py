@@ -84,8 +84,10 @@ def experiment_signature(config, estimators):
             'features':FEATURES,'parameters':{name:e.get_params() for name,e in estimators.items()}}
 
 
-def train(config, estimators=None, resume=False):
-    out=Path(config['output_dir']);(out/'models').mkdir(parents=True,exist_ok=True)
+def train(config, estimators=None, resume=False, results_dir=None):
+    source_out=Path(config['output_dir'])
+    out=Path(results_dir) if results_dir is not None else source_out
+    (out/'models').mkdir(parents=True,exist_ok=True)
     (out/'predictions').mkdir(parents=True,exist_ok=True)
     frame,observations,run=load_prepared(config)
     train_df=frame.loc[frame.split=='train'].reset_index(drop=True)
@@ -162,7 +164,7 @@ def train(config, estimators=None, resume=False):
         summaries.append(row);confusions[name]=cm
         artifact={'pipeline':model,'features':FEATURES,'configuration':config,
                   'label_definition':'Agreement with monotonic reference-route derived labels',
-                  'prepare_manifest_sha256':file_hash(out/'run_manifest.json')}
+                  'prepare_manifest_sha256':file_hash(source_out/'run_manifest.json')}
         joblib.dump(artifact,out/'models'/f'{name}.joblib',compress=3)
         scored=test_df[KEYS+['candidate_arc_id','reference_arc_id','label']].copy()
         scored['probability_correct']=test_proba
@@ -180,8 +182,12 @@ def train(config, estimators=None, resume=False):
 
 
 def write_model_report(summary,details,run,out):
-    lines=['# P1 model report — KNN and Gaussian Naive Bayes','',
-           'Actual experiments, not placeholder results. These are two of the team\'s minimum five models. P2 must add the remaining models and Bayesian optimisation; P3 must evaluate HMM/Viterbi.','',
+    model_names=[str(name) for name in summary.model.tolist()]
+    is_p1_baselines=set(model_names)=={'knn','gaussian_nb'}
+    title='# P1 model report — KNN and Gaussian Naive Bayes' if is_p1_baselines else '# Model report — '+', '.join(model_names)
+    intro=('Actual experiments, not placeholder results. These are two of the team\'s minimum five models. P2 must add the remaining models and Bayesian optimisation; P3 must evaluate HMM/Viterbi.'
+           if is_p1_baselines else 'Actual experiments from the shared training and evaluation harness. Scores use labels derived by monotonic alignment to the supplied reference routes; they are not independently verified GPS ground truth.')
+    lines=[title,'',intro,'',
            '## Shared experimental design','',
            f'- Training trips: {sum(t["split"]=="train" for t in run["trips"])}; student-test trips: {sum(t["split"]=="student_test" for t in run["trips"])}.',
            '- GroupKFold keeps all points/candidates from each trip together. Median imputation and StandardScaler are fitted within each fold, then refitted on training only for final models.',
@@ -200,7 +206,16 @@ def write_model_report(summary,details,run,out):
                'No iterative loss is minimised. Training stores transformed examples; prediction uses distance-weighted neighbour votes. Training-set self-neighbours make resubstitution performance optimistic.'),
         'gaussian_nb':('Probabilistic','A fast probabilistic baseline tests whether simple class-conditional feature distributions can distinguish candidate roads.',
                        'Fast and compact. Conditional independence and Gaussian assumptions are imperfect: distance, rank, heading and previous-distance features can be correlated or skewed. Probabilities may be poorly calibrated.',
-                       'Estimates class priors and per-class feature means/variances; predicts by the Gaussian naive Bayes likelihood rule. Variance smoothing stabilises calculations.')}
+                       'Estimates class priors and per-class feature means/variances; predicts by the Gaussian naive Bayes likelihood rule. Variance smoothing stabilises calculations.'),
+        'random_forest':('Tree ensemble','A Random Forest can model nonlinear interactions among distance, heading, speed and road-context features.',
+                         'Handles nonlinear feature effects and provides a useful ensemble baseline. A large forest can use substantial memory and prediction time; probabilities may require calibration.',
+                         'Fits bootstrap decision trees and aggregates their class probabilities. The trees reduce variance compared with a single decision tree.'),
+        'logistic_regression':('Linear probabilistic','Logistic Regression provides a fast, interpretable linear baseline for candidate correctness.',
+                               'Efficient and produces probabilities, but its linear decision boundary may miss nonlinear interactions among road features.',
+                               'Minimises regularised logistic loss; probabilities come from the fitted logistic function.'),
+        'hist_gradient_boosting':('Boosting ensemble','HistGradientBoosting can capture nonlinear feature relationships while using histogram-based split search.',
+                                  'Models nonlinear interactions and can be efficient on large tables. Results depend on tree depth, learning rate and iteration count; probability calibration may vary.',
+                                  'Adds shallow decision trees sequentially to reduce logistic loss; histogram bins speed up split search.')}
     for r in summary.itertuples():
         family,why,limits,objective=explanations.get(r.model,('Custom','Document suitability.','Document limitations.','Document objective.'))
         lines+=['',f'## 3.2 — {r.model}','',f'**Family and suitability:** {family}. {why}',
@@ -211,7 +226,8 @@ def write_model_report(summary,details,run,out):
                 '',f'**Generalisation evidence:** sampled training resubstitution macro F1 {r.train_macro_f1:.4f} ({r.diagnostic_observations:,} observations), CV {r.cv_macro_f1:.4f}, student-test {r.student_macro_f1:.4f}. Sampled training minus CV gap is {r.train_macro_f1-r.cv_macro_f1:.4f}; discuss this alongside fold variability and per-trip failures. A single gap does not prove overfitting; low scores alone do not prove underfitting.',
                 '',f'**Efficiency:** final fit {r.training_seconds:.2f} seconds; student prediction {r.student_inference_seconds:.2f} seconds over {r.student_rows:,} candidate rows.',
                 '',f'**Diagnostics:** see figures/{r.model}_confusion.png and {r.model}_per_trip.csv. These models do not produce epoch-wise histories, so no artificial training-loss curves are supplied.']
-    lines+=['','## Model comparison interpretation','',
-            'Use the measured CV and student-test table to compare these two baselines. Probability quality and Top-1 accuracy both matter for subsequent decoding. No team-wide final model is selected here because the other three or more model experiments are outside P1. No Bayesian optimisation or HMM results are claimed.','',
+    comparison_text=('Use the measured CV and student-test table to compare these two baselines. Probability quality and Top-1 accuracy both matter for subsequent decoding. No team-wide final model is selected here because the other three or more model experiments are outside P1. No Bayesian optimisation or HMM results are claimed.'
+                     if is_p1_baselines else 'Use the measured cross-validation and student-test metrics to compare these experiments. Model selection should consider generalisation, fold stability, probability quality, inference speed, route continuity and compatibility with the decoder. These results alone do not include Bayesian optimisation or HMM/Viterbi decoding.')
+    lines+=['','## Model comparison interpretation','',comparison_text,'',
             'Inspect the per-trip CSVs and maps before writing team conclusions. All members should verify and understand this generated results draft before submission.']
     (out/'MODEL_REPORT.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')

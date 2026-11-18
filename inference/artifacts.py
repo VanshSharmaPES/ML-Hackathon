@@ -51,6 +51,14 @@ class Artifacts:
         return self.bundle["configuration"]
 
     @property
+    def model_info(self) -> dict | None:
+        """What the served model is and how it was chosen (from the bundle; no reference data)."""
+        if not self.loaded:
+            return None
+        keys = ("hyperparameters", "selected_by", "selection_metrics", "tuning", "trained_on")
+        return {"model_name": self.model_name, **{k: self.bundle[k] for k in keys if k in self.bundle}}
+
+    @property
     def model_name(self) -> str:
         if not self.loaded:
             return "none"

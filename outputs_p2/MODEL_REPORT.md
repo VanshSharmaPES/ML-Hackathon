@@ -1,6 +1,6 @@
-# P1 model report — KNN and Gaussian Naive Bayes
+# Model report — logistic_regression, hist_gradient_boosting
 
-Actual experiments, not placeholder results. These are two of the team's minimum five models. P2 must add the remaining models and Bayesian optimisation; P3 must evaluate HMM/Viterbi.
+Actual experiments from the shared training and evaluation harness. Scores use labels derived by monotonic alignment to the supplied reference routes; they are not independently verified GPS ground truth.
 
 ## Shared experimental design
 
@@ -19,13 +19,13 @@ Actual experiments, not placeholder results. These are two of the team's minimum
 
 ## 3.2 — logistic_regression
 
-**Family and suitability:** Custom. Document suitability.
+**Family and suitability:** Linear probabilistic. Logistic Regression provides a fast, interpretable linear baseline for candidate correctness.
 
-**Strengths and limitations:** Document limitations.
+**Strengths and limitations:** Efficient and produces probabilities, but its linear decision boundary may miss nonlinear interactions among road features.
 
 **Configuration:** `{"C": 1.0, "class_weight": null, "dual": false, "fit_intercept": true, "intercept_scaling": 1, "l1_ratio": 0.0, "max_iter": 2000, "n_jobs": null, "penalty": "deprecated", "random_state": 42, "solver": "lbfgs", "tol": 0.0001, "verbose": 0, "warm_start": false}`
 
-**Objective / training rule:** Document objective.
+**Objective / training rule:** Minimises regularised logistic loss; probabilities come from the fitted logistic function.
 
 **Measured results:** CV macro F1 0.8297 (fold SD 0.0220); student-test macro precision 0.8741, macro recall 0.8325, macro F1 0.8516, Top-1 0.7993, log loss 0.1651.
 
@@ -37,13 +37,13 @@ Actual experiments, not placeholder results. These are two of the team's minimum
 
 ## 3.2 — hist_gradient_boosting
 
-**Family and suitability:** Custom. Document suitability.
+**Family and suitability:** Boosting ensemble. HistGradientBoosting can capture nonlinear feature relationships while using histogram-based split search.
 
-**Strengths and limitations:** Document limitations.
+**Strengths and limitations:** Models nonlinear interactions and can be efficient on large tables. Results depend on tree depth, learning rate and iteration count; probability calibration may vary.
 
 **Configuration:** `{"categorical_features": "from_dtype", "class_weight": null, "early_stopping": "auto", "interaction_cst": null, "l2_regularization": 0.0, "learning_rate": 0.1, "loss": "log_loss", "max_bins": 255, "max_depth": null, "max_features": 1.0, "max_iter": 100, "max_leaf_nodes": 31, "min_samples_leaf": 20, "monotonic_cst": null, "n_iter_no_change": 10, "random_state": 42, "scoring": "loss", "tol": 1e-07, "validation_fraction": 0.1, "verbose": 0, "warm_start": false}`
 
-**Objective / training rule:** Document objective.
+**Objective / training rule:** Adds shallow decision trees sequentially to reduce logistic loss; histogram bins speed up split search.
 
 **Measured results:** CV macro F1 0.8396 (fold SD 0.0560); student-test macro precision 0.8879, macro recall 0.8698, macro F1 0.8785, Top-1 0.8105, log loss 0.1283.
 
@@ -55,6 +55,6 @@ Actual experiments, not placeholder results. These are two of the team's minimum
 
 ## Model comparison interpretation
 
-Use the measured CV and student-test table to compare these two baselines. Probability quality and Top-1 accuracy both matter for subsequent decoding. No team-wide final model is selected here because the other three or more model experiments are outside P1. No Bayesian optimisation or HMM results are claimed.
+Use the measured cross-validation and student-test metrics to compare these experiments. Model selection should consider generalisation, fold stability, probability quality, inference speed, route continuity and compatibility with the decoder. These results alone do not include Bayesian optimisation or HMM/Viterbi decoding.
 
 Inspect the per-trip CSVs and maps before writing team conclusions. All members should verify and understand this generated results draft before submission.

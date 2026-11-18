@@ -12,6 +12,8 @@ class HealthResponse(BaseModel):
     method: str
     model_loaded: bool
     n_trips: int
+    # hyperparameters, selection rule and CV score of the served model (None for the baseline)
+    model_info: Optional[dict] = None
 
 
 class TripInfo(BaseModel):

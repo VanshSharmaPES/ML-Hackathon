@@ -7,7 +7,7 @@ from .pipeline import prepare,regenerate_maps
 
 def main():
     parser=argparse.ArgumentParser(description='PathSnap P1 data/features and baseline experiments')
-    parser.add_argument('command',choices=['prepare','train','maps','all'])
+    parser.add_argument('command',choices=['prepare','train','maps','all','report'])
     parser.add_argument('--config',default='config.json')
     parser.add_argument('--data-root',help='Directory containing train/ and student_test/')
     parser.add_argument('--output',help='Output directory (relative to working directory)')
@@ -48,3 +48,8 @@ def main():
         results_dir=Path(args.results_dir).resolve() if args.results_dir else None
         train(config,estimators=estimators,resume=args.resume,results_dir=results_dir)
     if args.command=='maps':regenerate_maps(config)
+    if args.command=='report':
+        # Rebuild MODEL_REPORT.md from saved results (no retraining). --results-dir picks the folder.
+        from .models import rewrite_report
+        rewrite_report(Path(args.results_dir).resolve() if args.results_dir else Path(config['output_dir']),
+                       Path(config['output_dir']))

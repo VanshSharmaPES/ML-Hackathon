@@ -68,6 +68,14 @@ async def lifespan(app: FastAPI):
              app.state.predictor.method, config.ARTIFACTS_DIR, config.EVAL_DIR, len(trips))
     if not app.state.predictor.model_loaded:
         log.warning("No model in %s. Serving the nearest-arc baseline.", config.ARTIFACTS_DIR)
+    else:
+        info = app.state.predictor.artifacts.model_info
+        if "hyperparameters" in info:
+            log.info("Model hyperparameters: %s", info["hyperparameters"])
+        if "selection_metrics" in info:
+            m = info["selection_metrics"]
+            log.info("Selected by %s | CV Top-1 %.4f | CV log loss %.4f | CV Macro F1 %.4f",
+                     info.get("selected_by", "?"), m["cv_top1"], m["cv_log_loss"], m["cv_macro_f1"])
     if not trips:
         log.warning("No trips found in %s. Set EVAL_DIR to the folder holding the trip folders.", config.EVAL_DIR)
     unscored = [tid for tid in trips if not reference_file(tid).is_file()]
@@ -80,7 +88,7 @@ async def lifespan(app: FastAPI):
     log.info("PathSnap API stopped")
 
 
-app = FastAPI(title="PathSnap API", version="0.4.0", lifespan=lifespan)
+app = FastAPI(title="PathSnap API", version="0.5.0", lifespan=lifespan)
 
 # The UI runs on another laptop, so allow cross-origin calls on the LAN.
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
@@ -105,7 +113,7 @@ async def log_requests(request: Request, call_next):
 def health(request: Request) -> HealthResponse:
     predictor = request.app.state.predictor
     return HealthResponse(status="ok", method=predictor.method, model_loaded=predictor.model_loaded,
-                          n_trips=len(list_trip_ids()))
+                          n_trips=len(list_trip_ids()), model_info=predictor.artifacts.model_info)
 
 
 @app.get("/trips", response_model=TripsResponse)

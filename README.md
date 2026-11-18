@@ -1,9 +1,14 @@
 # PathSnap: Map-Matching & Route Reconstruction
 
 Matches noisy GPS trajectories to a road network. For each GPS point we generate
-candidate road segments, score them with a trained classifier, and decode a
-connected route with an HMM + Viterbi. A FastAPI server (Laptop 1) runs the
-pipeline; an evaluator UI (Laptop 2) selects a trip and shows the predicted route.
+candidate road segments, score them with a trained classifier (Optuna-tuned
+HistGradientBoosting), and decode a connected route with an HMM + Viterbi that uses
+road connectivity (`hmm/viterbi.py`). A FastAPI server (Laptop 1) runs the pipeline;
+an evaluator UI (Laptop 2) selects a trip and shows the predicted route.
+
+Evidence: model choice `outputs/model_selection/MODEL_SELECTION.md`, tuning
+`outputs_p2/tuning/TUNING_REPORT.md`, classifier only vs HMM `outputs/hmm/HMM_REPORT.md`,
+features `outputs/feature_selection*/FEATURE_SELECTION.md`.
 
 UE24CS352A Machine Learning, PES University RR Campus.
 
@@ -80,17 +85,32 @@ into the UTM zone of its own GPS track (`pathsnap_p1/geometry.py`).
    ```
    Writes `outputs/feature_selection/FEATURE_SELECTION.md` and its figures.
 4. **Interactive maps (P1)**: `python -m pathsnap_p1 maps`
-5. **Further models (P2)**: Logistic Regression and HistGradientBoosting through the same harness:
-   `python train_p2_baselines.py` (results in `outputs_p2/`).
+5. **Further models**: Logistic Regression and HistGradientBoosting (P2) through the same harness:
+   `python train_p2_baselines.py` (results in `outputs_p2/`); Random Forest:
+   `python -m pathsnap_p1 train --model random_forest --results-dir outputs/random_forest`.
+   `python -m pathsnap_p1 report --results-dir <dir>` rebuilds a folder's `MODEL_REPORT.md` without retraining.
 6. **Bayesian optimisation (P2)**: Optuna TPE, 50 trials per model, 5-fold trip-grouped CV Macro F1 on the
    training trips: `python tune_p2_optuna.py` (trials and best parameters in `outputs_p2/optuna/`).
-   Then compare untuned vs tuned on the same folds and student_test trips, and export the selected
-   tuned model to `artifacts/model.joblib` (about 10 minutes):
+   Then compare untuned vs tuned on the same folds and student_test trips (about 5 minutes):
    ```bash
-   python -m optimisation.tuned_vs_untuned --prepared /tmp/pathsnap-prepared --export
+   python -m optimisation.tuned_vs_untuned --prepared /tmp/pathsnap-prepared
    ```
-   Writes `outputs_p2/tuning/TUNING_REPORT.md`, `tuned_vs_untuned.csv`, `tuning_cost.csv` and figures.
-7. **HMM / Viterbi decoding and comparison (P3)**: _TODO_
+   Writes `outputs_p2/tuning/TUNING_REPORT.md` (including a per-fold breakdown of the gain), CSVs and figures.
+7. **Model selection and export**: all five models plus the nearest-arc baseline on the same folds; primary
+   metric CV Top-1, ties within 0.005 broken by CV log loss; refits the choice and writes `artifacts/model.joblib`:
+   ```bash
+   python -m optimisation.select_model --prepared /tmp/pathsnap-prepared --export
+   ```
+   Writes `outputs/model_selection/MODEL_SELECTION.md`, `model_selection.csv` and a figure.
+8. **Feature selection with the served model**:
+   `python -m pathsnap_p1.feature_selection --model hist_gradient_boosting_tuned --prepared /tmp/pathsnap-prepared --output outputs/feature_selection_hgb`
+9. **HMM / Viterbi decoding**: tunes the decoder costs (Optuna TPE, 40 trials) on out-of-fold scores of the
+   training trips, then compares classifier only vs classifier + HMM on student_test and writes
+   `artifacts/hmm_config.json` (the API then serves classifier + HMM):
+   ```bash
+   python -m hmm.tune_decoder --prepared /tmp/pathsnap-prepared
+   ```
+   Writes `outputs/hmm/HMM_REPORT.md`, CSVs, the search record and a figure.
 
 Quick isolated check: `python -m pathsnap_p1 all --limit 2 --output outputs/smoke --folds 2`.
 

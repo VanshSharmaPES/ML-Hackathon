@@ -1,52 +1,61 @@
 # Interfaces
 
+How the parts of the pipeline connect. P1's detailed feature and label contract is in
+[`HANDOVER.md`](../HANDOVER.md); this file covers what each role hands to the next.
+
 ## Conventions
 - Raw files store **longitude, latitude** (in that order).
-- Trips come from all over the world (24 UTM zones, both hemispheres). Each trip is projected into the **UTM zone of its own GPS track** (`inference.geo.TripProjection`); `x`/`y` are metres. Never use one fixed CRS for all trips.
-- Node IDs and arc IDs are **0-based row indices, local to each trip**. Never use them as model features. Raw lon/lat must not be features either.
-- Most roads appear as **two arcs with identical geometry** (A→B and B→A). Distance alone cannot separate them; direction of travel must.
+- Trips come from all over the world (24 UTM zones, both hemispheres). Each trip is projected into
+  the **UTM zone of its own GPS track** (`pathsnap_p1.geometry.choose_utm`); `x_m` / `y_m` are
+  metres. Never compute distances across trips or with one fixed CRS.
+- Node IDs and arc IDs are **0-based row indices, local to each trip**, never renumbered. Never use
+  them as model features. Raw lon/lat must not be features either.
+- Most roads appear as **two arcs with identical geometry** (A→B and B→A). Distance alone cannot
+  separate them; direction of travel (`heading_difference_deg`) must.
 - `trip_id` is the 8-digit folder name as a string, e.g. `"00000040"`.
-- `obs_idx` is the 0-based row index in the trip's `.track` file.
-- Paths come from `DATA_DIR` (default `./data`); never hardcode absolute paths.
+- `observation_id` is the original 0-based row in the trip's `.track` file (kept after cleaning).
+  `sequence_index` is the cleaned chronological order. The API calls this field `obs_idx`.
+- Pipeline settings live in `config.json`; data is read from `data/` unless `--data-root` /
+  `DATA_DIR` says otherwise. Never hardcode absolute paths.
 
-## 0. Trip object (shared by everyone)
-`inference.trip_io.load_trip(trip_dir) -> Trip` reads `.track`, `.nodes`, `.arcs` (never `.route`):
+## 1. Shared P1 modules (used by everyone)
 
-| Field | Shape | Meaning |
+| What | Function | Notes |
 |---|---|---|
-| `trip_id` | str | Folder name |
-| `track` | DataFrame | `obs_idx, lon, lat, t` |
-| `nodes`, `nodes_xy` | (n_nodes, 2) | lon/lat and metres |
-| `arcs` | (n_arcs, 2) int | `from_node, to_node` |
-| `gps_xy` | (n_points, 2) | metres, same row order as `track` |
-| `epsg` | int | UTM zone used |
-
-## 1. Labels and candidates (P1 → P2, P3, P4)
-- **Per-point labels:** `data_processing.route_alignment.align_points_to_route(gps_xy, nodes_xy, arcs, route) -> (aligned_arc_id per point, distance_m)`. Training labels and the API's Top-1 scoring both use this function.
-- **Candidates:** `features/candidates.py` must define
-  `build_candidates(trip: Trip, cfg: dict) -> pd.DataFrame`, one row per (GPS point, candidate arc), with at least `obs_idx`, `arc_id` and every column in `features.json`. `cfg` is `artifacts/hmm_config.json`.
-- Training table (parquet, local only, not committed) adds `trip_id` and `label` (1 if `arc_id` equals the aligned arc for that point).
-- Points with zero candidates are recorded during training (for candidate miss rate).
+| Load a trip | `pathsnap_p1.data.load_trip(dir, split, config, with_reference=True)` | Returns `Trip` with `observations`, `nodes`, `arcs`, `route`, `audit`. Prediction code must pass `with_reference=False` (the `.route` file is then never opened) |
+| Candidates + features | `pathsnap_p1.features.generate_features(trip, config)` | One row per (observation, candidate arc). Model inputs are exactly `pathsnap_p1.features.FEATURES` |
+| Per-point labels | `pathsnap_p1.alignment.align_reference(trip, config)` | Monotonic least-squares alignment of points to the route. Used for training labels **and** the API's Top-1 scoring |
+| Train / compare models | `pathsnap_p1.models.train(config, estimators={...})` | Trip-grouped CV, student-test evaluation, saves a model bundle per estimator |
 
 ## 2. Model artifacts (P2, P3 → P4)
-All three files go in `artifacts/`. The API loads them once at startup.
-- `model.joblib`: fitted scikit-learn `Pipeline` (preprocessing + model) with `predict_proba` and `classes_` containing `1`.
-- `features.json`: `{"features": [ordered column names], "model_name": str, "trained_on": "train (80 trips)", "seed": int}`
-- `hmm_config.json`: candidate settings (radius, k) and emission/transition/gap parameters.
+Both files go in `artifacts/`. The API loads them once at startup.
 
-None present → API serves the nearest-arc baseline. Some but not all present → API refuses to start.
+- `model.joblib`: the bundle saved by `pathsnap_p1.models.train`:
+  `{"pipeline": fitted sklearn Pipeline, "features": [...], "configuration": {...}, ...}`.
+  The pipeline must have `predict_proba` with class `1` = "this candidate is the correct arc".
+  Optionally add `"model_name": "<name>"` for display; otherwise the classifier's class name is shown.
+  `configuration` is reused at serving time, so candidates and features are generated with exactly
+  the training settings.
+- `hmm_config.json`: emission / transition / gap parameters for the decoder.
+
+Neither present → API serves the nearest-arc baseline. Only one present → API refuses to start.
+Train the final model with the pinned `requirements.txt`, or it may not load on the API laptop.
 
 ## 3. Decoder (P3 → P4)
 `hmm/viterbi.py` must define
+
 ```python
-def decode(cand_df, probs, trip, cfg) -> dict[int, int]:
-    """cand_df: build_candidates output; probs: P(label=1) per row of cand_df;
-    trip: Trip; cfg: hmm_config.json. Returns {obs_idx: arc_id}.
-    Points left out are reported as -1 (no arc)."""
+def decode(candidates, probs, trip, cfg) -> dict[int, int]:
+    """candidates: generate_features output for one trip (observation_id, sequence_index,
+    candidate_arc_id, features, projected_x_m/y_m, segment_fraction, ...);
+    probs: P(label = 1) per row of candidates; trip: pathsnap_p1 Trip (nodes, arcs);
+    cfg: hmm_config.json. Returns {observation_id: arc_id}.
+    Observations left out are reported as -1 (no arc)."""
 ```
 
 ## 4. Inference (P4)
-`inference.pipeline.Predictor(artifacts).predict(trip_dir) -> dict`. Never reads `.route`.
+`inference.pipeline.Predictor(artifacts, pipeline_config).predict(trip_dir) -> (prediction, trip)`.
+Never reads `.route`.
 
 ## 5. API (P4)
 `GET /health` → `{"status": "ok", "method": str, "model_loaded": bool, "n_trips": int}`
@@ -68,6 +77,7 @@ def decode(cand_df, probs, trip, cfg) -> dict[int, int]:
 }
 ```
 - `method` names the pipeline that produced the prediction (`"<model_name> + HMM/Viterbi"` once a model is loaded).
+- `obs` and `predicted_arc_per_obs` follow the cleaned chronological order (exact duplicate GPS rows removed).
 - `predicted_arc_per_obs` uses `-1` for points with no arc; `predicted_arcs` drops those and collapses repeats.
 - `latency_ms` keys follow the pipeline stages (`candidates`, `model`, `viterbi` for the full pipeline); `total` is always present.
 - Errors: 404 unknown trip, 422 malformed trip ID, 500 pipeline failure.
@@ -75,7 +85,8 @@ def decode(cand_df, probs, trip, cfg) -> dict[int, int]:
 The response never contains reference-route arcs or geometry. Metrics are computed on the server.
 
 ## Metric definitions (shared by the report and the API)
-- **Top-1 accuracy:** share of GPS points whose predicted arc equals the reference arc aligned to that point (`align_points_to_route`). A `-1` counts as wrong.
-- **Candidate miss rate:** share of GPS points whose aligned reference arc is not in the candidate set.
+- **Top-1 accuracy:** share of labelled GPS points whose predicted arc equals the reference arc aligned
+  to that point (`align_reference`). A `-1` counts as wrong; candidate misses stay in the denominator.
+- **Candidate miss rate:** share of labelled GPS points whose aligned reference arc is not in the candidate set.
 - **Route precision / recall / F1:** predicted arc set vs reference arc set.
 - **Continuity:** share of consecutive distinct predicted arcs where the first arc's `to_node` equals the next arc's `from_node`.

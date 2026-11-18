@@ -15,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from inference.artifacts import load_artifacts
 from inference.pipeline import Predictor
-from inference.trip_io import count_points, trip_file
 
 from . import config
 from .schemas import HealthResponse, PredictRequest, PredictResponse, TripInfo, TripsResponse
@@ -29,6 +28,16 @@ logging.basicConfig(
 log = logging.getLogger("pathsnap.api")
 
 
+def track_file(trip_dir: Path) -> Path:
+    return trip_dir / f"{trip_dir.name}.track"
+
+
+def count_points(trip_dir: Path) -> int:
+    """Number of rows in the .track file, without parsing it."""
+    with open(track_file(trip_dir), "rb") as f:
+        return sum(1 for line in f if line.strip())
+
+
 def list_trip_ids() -> list[str]:
     """Trip folders currently in EVAL_DIR. Read on every call, never hardcoded."""
     if not config.EVAL_DIR.is_dir():
@@ -36,7 +45,7 @@ def list_trip_ids() -> list[str]:
     return sorted(
         p.name
         for p in config.EVAL_DIR.iterdir()
-        if p.is_dir() and config.TRIP_ID_PATTERN.match(p.name) and trip_file(p, "track").is_file()
+        if p.is_dir() and config.TRIP_ID_PATTERN.match(p.name) and track_file(p).is_file()
     )
 
 
@@ -53,7 +62,7 @@ def fmt(value) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load the model and configs once, not per request.
-    app.state.predictor = Predictor(load_artifacts(config.ARTIFACTS_DIR))
+    app.state.predictor = Predictor(load_artifacts(config.ARTIFACTS_DIR), config.load_pipeline_config())
     trips = list_trip_ids()
     log.info("PathSnap API starting | method=%s | artifacts=%s | eval_dir=%s | trips=%d",
              app.state.predictor.method, config.ARTIFACTS_DIR, config.EVAL_DIR, len(trips))
@@ -65,7 +74,7 @@ async def lifespan(app: FastAPI):
     log.info("PathSnap API stopped")
 
 
-app = FastAPI(title="PathSnap API", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="PathSnap API", version="0.3.0", lifespan=lifespan)
 
 # The UI runs on another laptop, so allow cross-origin calls on the LAN.
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
@@ -103,11 +112,12 @@ def trips() -> TripsResponse:
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest, request: Request) -> PredictResponse:
     trip_dir = resolve_trip(req.trip_id)
+    predictor = request.app.state.predictor
     start = time.perf_counter()
     try:
-        prediction = request.app.state.predictor.predict(trip_dir)
+        prediction, trip = predictor.predict(trip_dir)
         t = time.perf_counter()
-        metrics = score_trip(trip_dir, prediction)
+        metrics = score_trip(trip_dir, trip, prediction, predictor.config)
         scoring_ms = (time.perf_counter() - t) * 1000
     except Exception as exc:
         log.exception("Prediction failed | trip=%s", req.trip_id)

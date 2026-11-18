@@ -1,0 +1,38 @@
+[
+  {
+    "filename": "student_test_00000000.html",
+    "bytes": 1334581,
+    "inlineScripts": 2,
+    "status": "passed"
+  },
+  {
+    "filename": "student_test_00000007.html",
+    "bytes": 464656,
+    "inlineScripts": 2,
+    "status": "passed"
+  },
+  {
+    "filename": "train_00000001.html",
+    "bytes": 8196218,
+    "inlineScripts": 2,
+    "status": "passed"
+  },
+  {
+    "filename": "train_00000002.html",
+    "bytes": 2035487,
+    "inlineScripts": 2,
+    "status": "passed"
+  },
+  {
+    "filename": "train_00000033_anomaly.html",
+    "bytes": 1253016,
+    "inlineScripts": 2,
+    "status": "passed"
+  },
+  {
+    "filename": "train_00000054_anomaly.html",
+    "bytes": 8547999,
+    "inlineScripts": 2,
+    "status": "passed"
+  }
+]

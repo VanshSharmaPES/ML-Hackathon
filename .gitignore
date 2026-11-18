@@ -8,13 +8,24 @@ Student folder/
 *.zip
 *.parquet
 
+# P1 pipeline: large regenerated intermediates (rebuilt by `python -m pathsnap_p1 prepare/train`)
+outputs/processed/
+outputs/predictions/
+outputs/smoke/
+# Per-experiment model bundles (KNN stores its whole training set). The FINAL model for
+# submission goes in artifacts/, which is committed.
+outputs/models/
+
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+.venv-*/
+.pytest_cache/
 .ipynb_checkpoints/
 *.egg-info/
+*.log
 
 # Secrets and local config (never commit credentials)
 .env
@@ -26,5 +37,5 @@ venv/
 .idea/
 .DS_Store
 
-# NOTE: artifacts/ (model weights, configs) and results/ (CSV logs, plots)
-# are intentionally NOT ignored. The deliverables require them in the repo.
+# NOTE: artifacts/ (final model + configs) and outputs/ results (CSV logs, figures,
+# reports, maps) are intentionally committed. The deliverables require them.
